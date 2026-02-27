@@ -75,9 +75,16 @@ router.get('/', async (req, res) => {
       startTime: { $gte: new Date() }
     });
 
-    // Get movies and halls for filter dropdowns
+    // Get movies and halls for filter dropdowns (deduplicate halls by name)
     const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-    const halls = await Hall.find().sort({ name: 1 });
+    const allHalls = await Hall.find().sort({ name: 1 });
+    const seenNames = new Set();
+    const halls = allHalls.filter(h => {
+      const key = h.name.toLowerCase();
+      if (seenNames.has(key)) return false;
+      seenNames.add(key);
+      return true;
+    });
 
     // Success message from redirects
     const success = req.query.created ? 'Screening scheduled successfully.' 

@@ -5,6 +5,16 @@ const Screening = require('../models/Screening');
 const Movie = require('../models/Movie');
 const Hall = require('../models/Hall');
 
+function dedupeHalls(halls) {
+  const seen = new Set();
+  return halls.filter(h => {
+    const key = h.name.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 //list all screenings get (with filtering)
 router.get('/', async (req, res) => {
   try {
@@ -65,9 +75,9 @@ router.get('/', async (req, res) => {
       .populate('hall')
       .sort({ startTime: -1 });
 
-    // Get movies and halls for filter dropdowns
+    // Get movies and halls for filter dropdowns (deduplicate halls by name)
     const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-    const halls = await Hall.find().sort({ name: 1 });
+    const halls = dedupeHalls(await Hall.find().sort({ name: 1 }));
 
     const success = req.query.created ? 'Screening scheduled successfully.' : req.query.updated ? 'Screening updated successfully.' : req.query.deleted ? 'Screening deleted successfully.' : null;
     res.render('screenings/index', { 
@@ -88,7 +98,7 @@ router.get('/', async (req, res) => {
 router.get('/new', async (req, res) => {
   try {
     const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-    const halls = await Hall.find({ isUnderMaintenance: false }).sort({ name: 1 });
+    const halls = dedupeHalls(await Hall.find({ isUnderMaintenance: false }).sort({ name: 1 }));
     
     res.render('screenings/new', { 
       movies, 
@@ -145,7 +155,7 @@ router.post('/', async (req, res) => {
     // Validate inputs
     if (!movieId || !hallId || !startTime) {
       const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-      const halls = await Hall.find({ isUnderMaintenance: false }).sort({ name: 1 });
+      const halls = dedupeHalls(await Hall.find({ isUnderMaintenance: false }).sort({ name: 1 }));
       return res.render('screenings/new', { 
         movies, 
         halls, 
@@ -158,7 +168,7 @@ router.post('/', async (req, res) => {
     const movie = await Movie.findById(movieId);
     if (!movie) {
       const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-      const halls = await Hall.find({ isUnderMaintenance: false }).sort({ name: 1 });
+      const halls = dedupeHalls(await Hall.find({ isUnderMaintenance: false }).sort({ name: 1 }));
       return res.render('screenings/new', { 
         movies, 
         halls, 
@@ -171,7 +181,7 @@ router.post('/', async (req, res) => {
     const hall = await Hall.findById(hallId);
     if (!hall) {
       const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-      const halls = await Hall.find({ isUnderMaintenance: false }).sort({ name: 1 });
+      const halls = dedupeHalls(await Hall.find({ isUnderMaintenance: false }).sort({ name: 1 }));
       return res.render('screenings/new', { 
         movies, 
         halls, 
@@ -182,7 +192,7 @@ router.post('/', async (req, res) => {
 
     if (hall.isUnderMaintenance) {
       const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-      const halls = await Hall.find({ isUnderMaintenance: false }).sort({ name: 1 });
+      const halls = dedupeHalls(await Hall.find({ isUnderMaintenance: false }).sort({ name: 1 }));
       return res.render('screenings/new', { 
         movies, 
         halls, 
@@ -200,7 +210,7 @@ router.post('/', async (req, res) => {
 
     if (overlapping.length > 0) {
       const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-      const halls = await Hall.find({ isUnderMaintenance: false }).sort({ name: 1 });
+      const halls = dedupeHalls(await Hall.find({ isUnderMaintenance: false }).sort({ name: 1 }));
       
       const overlappingInfo = overlapping.map(s => 
         `"${s.movie.title}" from ${s.startTime.toLocaleString()} to ${s.endTime.toLocaleString()}`
@@ -227,7 +237,7 @@ router.post('/', async (req, res) => {
   } catch (error) {
     console.error('Error creating screening:', error);
     const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-    const halls = await Hall.find({ isUnderMaintenance: false }).sort({ name: 1 });
+    const halls = dedupeHalls(await Hall.find({ isUnderMaintenance: false }).sort({ name: 1 }));
     res.render('screenings/new', { 
       movies, 
       halls, 
@@ -268,7 +278,7 @@ router.get('/:id/edit', async (req, res) => {
     }
 
     const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-    const halls = await Hall.find().sort({ name: 1 }); // Show all halls for editing
+    const halls = dedupeHalls(await Hall.find().sort({ name: 1 })); // Show all halls for editing
 
     res.render('screenings/edit', { 
       screening, 
@@ -297,7 +307,7 @@ router.post('/:id', async (req, res) => {
     const movie = await Movie.findById(movieId);
     if (!movie) {
       const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-      const halls = await Hall.find().sort({ name: 1 });
+      const halls = dedupeHalls(await Hall.find().sort({ name: 1 }));
       const currentScreening = await Screening.findById(req.params.id)
         .populate('movie')
         .populate('hall');
@@ -314,7 +324,7 @@ router.post('/:id', async (req, res) => {
     const hall = await Hall.findById(hallId);
     if (!hall) {
       const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-      const halls = await Hall.find().sort({ name: 1 });
+      const halls = dedupeHalls(await Hall.find().sort({ name: 1 }));
       const currentScreening = await Screening.findById(req.params.id)
         .populate('movie')
         .populate('hall');
@@ -329,7 +339,7 @@ router.post('/:id', async (req, res) => {
 
     if (hall.isUnderMaintenance) {
       const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-      const halls = await Hall.find().sort({ name: 1 });
+      const halls = dedupeHalls(await Hall.find().sort({ name: 1 }));
       const currentScreening = await Screening.findById(req.params.id)
         .populate('movie')
         .populate('hall');
@@ -351,7 +361,7 @@ router.post('/:id', async (req, res) => {
 
     if (overlapping.length > 0) {
       const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-      const halls = await Hall.find().sort({ name: 1 });
+      const halls = dedupeHalls(await Hall.find().sort({ name: 1 }));
       const currentScreening = await Screening.findById(req.params.id)
         .populate('movie')
         .populate('hall');
@@ -380,7 +390,7 @@ router.post('/:id', async (req, res) => {
   } catch (error) {
     console.error('Error updating screening:', error);
     const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-    const halls = await Hall.find().sort({ name: 1 });
+    const halls = dedupeHalls(await Hall.find().sort({ name: 1 }));
     const screening = await Screening.findById(req.params.id)
       .populate('movie')
       .populate('hall');
