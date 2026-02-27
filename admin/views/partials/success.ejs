@@ -1,0 +1,8 @@
+<% if (typeof success !== 'undefined' && success) { %>
+  <div class="alert alert-success" role="alert" style="display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+    <span><%= success %></span>
+    <% if (typeof actionLink !== 'undefined' && actionLink && typeof actionText !== 'undefined' && actionText) { %>
+      <a href="<%= actionLink %>" class="btn btn-sm btn-primary" style="margin-left: auto;"> <%= actionText %></a>
+    <% } %>
+  </div>
+<% } %>

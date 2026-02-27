@@ -1,0 +1,33 @@
+<%- include('../partials/header', { title: 'Add Genre' }) %>
+
+<div class="container" id="main-content">
+    <%- include('../partials/breadcrumb', { items: [{ label: 'Dashboard', href: '/dashboard' }, { label: 'Genres', href: '/admin/genres' }, { label: 'Add Genre' }] }) %>
+  <div class="page-header">
+    <div>
+      <h1>Add New Genre</h1>
+      <p style="color: var(--light-text); font-size: 1rem; margin-top: 0.5rem;">Add a genre to your movie catalog</p>
+    </div>
+    <a href="/admin/genres" class="btn btn-secondary">← Back to Genres</a>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <% if (error) { %>
+        <div class="alert alert-danger"><%= error %></div>
+      <% } %>
+
+      <form action="/admin/genres" method="POST">
+        <div class="form-group">
+          <label for="name">Genre Name *</label>
+          <input type="text" id="name" name="name" class="form-control" placeholder="e.g., Action, Comedy, Sci-Fi" required autofocus>
+        </div>
+        <div class="btn-group">
+          <button type="submit" class="btn btn-primary">Add Genre</button>
+          <a href="/admin/genres" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

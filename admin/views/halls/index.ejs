@@ -1,0 +1,131 @@
+<%- include('../partials/header', { title: 'Halls' }) %>
+
+<div class="container" id="main-content">
+  <%- include('../partials/success', { success: typeof success !== 'undefined' ? success : null }) %>
+  <div class="page-header">
+    <div>
+      <h1>Halls Management</h1>
+      <p style="color: var(--light-text); font-size: 1rem; margin-top: 0.5rem;">Manage your cinema halls and seating configurations</p>
+    </div>
+    <a href="/admin/halls/new" class="btn btn-warning">Add New Hall</a>
+  </div>
+
+  <!-- Filters -->
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-header">
+      <h2 style="margin: 0; font-size: 1.1rem;">Filters</h2>
+    </div>
+    <div class="card-body">
+      <form method="GET" action="/admin/halls" class="filter-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; align-items: end;">
+        <div>
+          <label for="search" style="display: block; font-size: 0.85rem; margin-bottom: 0.35rem; color: var(--light-text);">Search Hall</label>
+          <input type="text" id="search" name="search" placeholder="Search halls..." value="<%= typeof filters !== 'undefined' && filters.search ? filters.search : '' %>" class="form-control" style="width: 100%; padding: 0.5rem;">
+        </div>
+        <div>
+          <label for="status" style="display: block; font-size: 0.85rem; margin-bottom: 0.35rem; color: var(--light-text);">Status</label>
+          <select id="status" name="status" class="form-control" style="width: 100%; padding: 0.5rem;">
+            <option value="">All</option>
+            <option value="operational" <%= typeof filters !== 'undefined' && filters.status === 'operational' ? 'selected' : '' %>>Operational</option>
+            <option value="maintenance" <%= typeof filters !== 'undefined' && filters.status === 'maintenance' ? 'selected' : '' %>>Under Maintenance</option>
+          </select>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="submit" class="btn btn-warning">Apply</button>
+          <a href="/admin/halls" class="btn btn-secondary">Clear</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Hall Stats Summary -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+    <div style="background: linear-gradient(135deg, #00d9a3 0%, #00b894 100%); color: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: var(--shadow);">
+      <div style="font-size: 0.8rem; opacity: 0.9; text-transform: uppercase; margin-bottom: 0.5rem;">Operational</div>
+      <div style="font-size: 2.5rem; font-weight: 800;"><%= halls.filter(h => !h.isUnderMaintenance).length %></div>
+    </div>
+    <div style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: var(--shadow);">
+      <div style="font-size: 0.8rem; opacity: 0.9; text-transform: uppercase; margin-bottom: 0.5rem;">Maintenance</div>
+      <div style="font-size: 2.5rem; font-weight: 800;"><%= halls.filter(h => h.isUnderMaintenance).length %></div>
+    </div>
+    <div style="background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-light) 100%); color: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: var(--shadow);">
+      <div style="font-size: 0.8rem; opacity: 0.9; text-transform: uppercase; margin-bottom: 0.5rem;">Total Halls</div>
+      <div style="font-size: 2.5rem; font-weight: 800;"><%= halls.length %></div>
+    </div>
+    <div style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); color: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: var(--shadow);">
+      <div style="font-size: 0.8rem; opacity: 0.9; text-transform: uppercase; margin-bottom: 0.5rem;">Total Capacity</div>
+      <div style="font-size: 2.5rem; font-weight: 800;"><%= halls.reduce((sum, h) => sum + (h.rows * h.columns), 0) %></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>All Cinema Halls</h2>
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <span class="badge badge-info"><%= halls.length %> halls</span>
+        <% if (halls.length > 0) { %>
+          <button onclick="exportTableToCSV('halls-export.csv')" class="btn btn-sm btn-export">Export</button>
+        <% } %>
+      </div>
+    </div>
+    <div class="card-body">
+      <% if (halls.length === 0) { %>
+        <div class="empty-state">
+          <h3>No cinema halls configured</h3>
+          <p>Create your first hall to start scheduling screenings!</p>
+          <a href="/admin/halls/new" class="btn btn-warning">Add Your First Hall</a>
+        </div>
+      <% } else { %>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Hall Name</th>
+                <th>Capacity</th>
+                <th>Layout</th>
+                <th>Wheelchair Seats</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% halls.forEach(hall => { %>
+                <tr>
+                  <td><strong style="font-size: 1.05rem; color: var(--primary-color);"><%= hall.name %></strong></td>
+                  <td><strong style="color: var(--accent-color);"><%= hall.rows * hall.columns %></strong> seats</td>
+                  <td><span class="badge badge-secondary"><%= hall.rows %> x <%= hall.columns %></span></td>
+                  <td>
+                    <% if (hall.wheelchairSeats && hall.wheelchairSeats.length > 0) { %>
+                      <span class="badge badge-info"><%= hall.wheelchairSeats.length %> seats</span>
+                    <% } else { %>
+                      <span class="badge badge-secondary">0 wheelchair</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <% if (hall.isUnderMaintenance) { %>
+                      <span class="badge badge-danger">Maintenance</span>
+                    <% } else { %>
+                      <span class="badge badge-success">Operational</span>
+                    <% } %>
+                  </td>
+                  <td style="color: var(--light-text);"><%= new Date(hall.createdAt).toLocaleDateString('en-CA') %></td>
+                  <td>
+                    <div class="table-actions">
+                      <a href="/admin/halls/<%= hall._id %>" class="btn btn-sm btn-primary">View</a>
+                      <a href="/admin/halls/<%= hall._id %>/edit" class="btn btn-sm btn-warning">Edit</a>
+                      <form action="/admin/halls/<%= hall._id %>/delete" method="POST" style="display: inline;" onsubmit="return confirmDelete('Are you sure you want to delete <%= hall.name %>? This action cannot be undone.');">
+                        <button type="submit" class="btn btn-sm btn-primary">Delete</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

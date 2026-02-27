@@ -1,0 +1,175 @@
+<%- include('../partials/header', { title: 'Dashboard' }) %>
+
+<div class="container" id="main-content">
+  <%- include('../partials/success', { 
+    success: typeof success !== 'undefined' ? success : null, 
+    actionLink: (typeof success !== 'undefined' && success && success.includes('Screening scheduled')) ? '/admin/screenings/new' : null,
+    actionText: (typeof success !== 'undefined' && success && success.includes('Screening scheduled')) ? 'Schedule Another →' : null
+  }) %>
+
+  <!-- Dashboard Filters -->
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-header">
+      <h2 style="margin: 0; font-size: 1.1rem;">Filters</h2>
+    </div>
+    <div class="card-body">
+      <form method="GET" action="/dashboard" class="filter-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; align-items: end;">
+        <div>
+          <label for="viewDate" style="display: block; font-size: 0.85rem; margin-bottom: 0.35rem; color: var(--light-text);">Schedule Date</label>
+          <div class="date-input-wrapper">
+            <input type="date" id="viewDate" name="viewDate" value="<%= typeof filters !== 'undefined' && filters.viewDate ? filters.viewDate : '' %>" class="form-control">
+          </div>
+        </div>
+        <div>
+          <label for="movieId" style="display: block; font-size: 0.85rem; margin-bottom: 0.35rem; color: var(--light-text);">Movie</label>
+          <select id="movieId" name="movieId" class="form-control" style="width: 100%; padding: 0.5rem;">
+            <option value="">All Movies</option>
+            <% if (typeof movies !== 'undefined') { movies.forEach(m => { %>
+              <option value="<%= m._id %>" <%= typeof filters !== 'undefined' && filters.movieId === m._id.toString() ? 'selected' : '' %>><%= m.title %></option>
+            <% }); } %>
+          </select>
+        </div>
+        <div>
+          <label for="hallId" style="display: block; font-size: 0.85rem; margin-bottom: 0.35rem; color: var(--light-text);">Hall</label>
+          <select id="hallId" name="hallId" class="form-control" style="width: 100%; padding: 0.5rem;">
+            <option value="">All Halls</option>
+            <% if (typeof halls !== 'undefined') { halls.forEach(h => { %>
+              <option value="<%= h._id %>" <%= typeof filters !== 'undefined' && filters.hallId === h._id.toString() ? 'selected' : '' %>><%= h.name %></option>
+            <% }); } %>
+          </select>
+        </div>
+        <div>
+          <label for="upcomingLimit" style="display: block; font-size: 0.85rem; margin-bottom: 0.35rem; color: var(--light-text);">Upcoming Limit</label>
+          <select id="upcomingLimit" name="upcomingLimit" class="form-control" style="width: 100%; padding: 0.5rem;">
+            <option value="5" <%= typeof filters !== 'undefined' && filters.upcomingLimit === '5' ? 'selected' : '' %>>5</option>
+            <option value="10" <%= (typeof filters === 'undefined' || !filters.upcomingLimit || filters.upcomingLimit === '10') ? 'selected' : '' %>>10</option>
+            <option value="20" <%= typeof filters !== 'undefined' && filters.upcomingLimit === '20' ? 'selected' : '' %>>20</option>
+            <option value="50" <%= typeof filters !== 'undefined' && filters.upcomingLimit === '50' ? 'selected' : '' %>>50</option>
+          </select>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="submit" class="btn btn-primary">Apply</button>
+          <a href="/dashboard" class="btn btn-secondary">Clear</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1>Dashboard</h1>
+      <p style="color: var(--light-text); font-size: 1.05rem; margin-top: 0.5rem;">Welcome back, <strong><%= staff.staffName %></strong></p>
+    </div>
+    <div class="btn-group">
+      <a href="/admin/screenings/new" class="btn btn-primary">New Screening</a>
+      <a href="/admin/movies/new" class="btn btn-success">New Movie</a>
+      <a href="/admin/halls/new" class="btn btn-warning">New Hall</a>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-grid">
+    <div class="stat-card success">
+      <h3>Active Movies</h3>
+      <div class="stat-value"><%= totalActiveMovies %></div>
+      <p>Currently showing in theaters</p>
+    </div>
+
+    <div class="stat-card info">
+      <h3>Today's Screenings</h3>
+      <div class="stat-value"><%= todayScreeningsCount %></div>
+      <p>Screenings scheduled for today</p>
+    </div>
+
+    <div class="stat-card <%= hallsUnderMaintenance > 0 ? 'warning' : 'success' %>">
+      <h3>Cinema Halls</h3>
+      <div class="stat-value"><%= totalHalls %></div>
+      <% if (hallsUnderMaintenance > 0) { %>
+        <p class="text-danger"><%= hallsUnderMaintenance %> under maintenance</p>
+      <% } else { %>
+        <p class="text-success">All halls operational</p>
+      <% } %>
+    </div>
+
+    <div class="stat-card info">
+      <h3>Upcoming Screenings</h3>
+      <div class="stat-value"><%= totalUpcomingScreenings %></div>
+      <p>Future scheduled screenings</p>
+    </div>
+  </div>
+
+  <!-- Schedule for selected date -->
+  <div class="card">
+    <div class="card-header">
+      <h2><%= typeof filters !== 'undefined' && filters.viewDate ? 'Schedule for ' + new Date(filters.viewDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : "Today's Schedule" %></h2>
+      <span class="badge badge-info"><%= todayScreenings.length %> screenings</span>
+    </div>
+    <div class="card-body">
+      <% if (todayScreenings.length === 0) { %>
+        <div class="empty-state">
+          <h3>No screenings today</h3>
+          <p>There are no movie screenings scheduled for today. Start planning tomorrow's schedule!</p>
+          <a href="/admin/screenings/new" class="btn btn-primary">Schedule a Screening</a>
+        </div>
+      <% } else { %>
+        <% todayScreenings.forEach(screening => { %>
+          <div class="screening-item">
+            <div class="screening-header">
+              <div style="flex: 1;">
+                <div class="screening-movie"><%= screening.movie.title %></div>
+                <div class="screening-details">
+                  <div>Hall: <strong><%= screening.hall.name %></strong></div>
+                  <div>Time: <strong><%= new Date(screening.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) %></strong></div>
+                  <div>Duration: <strong><%= screening.movie.duration %> mins</strong></div>
+                  <div>Genre: <strong><%= screening.movie.genre %></strong></div>
+                </div>
+              </div>
+              <div class="btn-group">
+                <a href="/admin/screenings/<%= screening._id %>" class="btn btn-sm btn-primary">View Details</a>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Upcoming Screenings -->
+  <div class="card">
+    <div class="card-header">
+      <h2>Upcoming Screenings</h2>
+      <a href="/admin/screenings" class="btn btn-sm btn-secondary">View All Screenings →</a>
+    </div>
+    <div class="card-body">
+      <% if (upcomingScreenings.length === 0) { %>
+        <div class="empty-state">
+          <h3>No upcoming screenings</h3>
+          <p>Plan ahead and schedule your next movie screenings!</p>
+          <a href="/admin/screenings/new" class="btn btn-primary">Schedule a Screening</a>
+        </div>
+      <% } else { %>
+        <% upcomingScreenings.forEach(screening => { %>
+          <div class="screening-item">
+            <div class="screening-header">
+              <div style="flex: 1;">
+                <div class="screening-movie"><%= screening.movie.title %></div>
+                <div class="screening-details">
+                  <div>Date: <strong><%= new Date(screening.startTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) %></strong></div>
+                  <div>Time: <strong><%= new Date(screening.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) %></strong></div>
+                  <div>Hall: <strong><%= screening.hall.name %></strong></div>
+                  <div>Duration: <strong><%= screening.movie.duration %> mins</strong></div>
+                </div>
+              </div>
+              <div class="btn-group">
+                <a href="/admin/screenings/<%= screening._id %>" class="btn btn-sm btn-primary">View</a>
+                <a href="/admin/screenings/<%= screening._id %>/edit" class="btn btn-sm btn-warning">Edit</a>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

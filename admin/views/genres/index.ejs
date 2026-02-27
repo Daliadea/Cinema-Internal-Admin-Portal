@@ -1,0 +1,68 @@
+<%- include('../partials/header', { title: 'Genres' }) %>
+
+<div class="container" id="main-content">
+  <%- include('../partials/breadcrumb', { items: [{ label: 'Dashboard', href: '/dashboard' }, { label: 'Movies', href: '/admin/movies' }, { label: 'Genres' }] }) %>
+  <%- include('../partials/success', { 
+    success: typeof success !== 'undefined' ? success : null,
+    actionLink: (typeof showAddAnother !== 'undefined' && showAddAnother) ? '/admin/genres/new' : null,
+    actionText: (typeof showAddAnother !== 'undefined' && showAddAnother) ? 'Add Another Genre →' : null
+  }) %>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert alert-danger"><%= error %></div>
+  <% } %>
+  <div class="page-header">
+    <div>
+      <h1>Movie Genres</h1>
+      <p style="color: var(--light-text); font-size: 1rem; margin-top: 0.5rem;">Manage genres for your movie catalog</p>
+    </div>
+    <div class="btn-group">
+      <a href="/admin/movies" class="btn btn-secondary">← Back to Movies</a>
+      <a href="/admin/movies/new" class="btn btn-success">Add Movie</a>
+      <a href="/admin/genres/new" class="btn btn-primary">Add Genre</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>All Genres</h2>
+      <span class="badge badge-info"><%= genres.length %> genres</span>
+    </div>
+    <div class="card-body">
+      <% if (genres.length === 0) { %>
+        <div class="empty-state">
+          <h3>No genres yet</h3>
+          <p>Add genres to categorize your movies. You can use them when adding or editing movies.</p>
+          <a href="/admin/genres/new" class="btn btn-primary">Add Your First Genre</a>
+        </div>
+      <% } else { %>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Genre Name</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% genres.forEach(genre => { %>
+                <tr>
+                  <td><strong style="font-size: 1.05rem; color: var(--primary-color);"><%= genre.name %></strong></td>
+                  <td>
+                    <div class="table-actions">
+                      <a href="/admin/genres/<%= genre._id %>/edit" class="btn btn-sm btn-warning">Edit</a>
+                      <form action="/admin/genres/<%= genre._id %>/delete" method="POST" style="display: inline;" onsubmit="return confirmDelete('Delete genre &quot;<%= genre.name %>&quot;? Movies using it must be updated first.');">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

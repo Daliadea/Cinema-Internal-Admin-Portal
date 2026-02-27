@@ -1,0 +1,162 @@
+<%- include('../partials/header', { title: 'Schedule New Screening' }) %>
+
+<div class="container" id="main-content">
+  <div class="page-header">
+    <div>
+      <h1>Schedule New Screening</h1>
+      <p style="color: var(--light-text); font-size: 1rem; margin-top: 0.5rem;">Create a new movie screening schedule</p>
+    </div>
+    <a href="/admin/screenings" class="btn btn-secondary">← Back to Screenings</a>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>Screening Details</h2>
+    </div>
+    <div class="card-body">
+      <% if (error) { %>
+        <div class="alert alert-danger">
+          <span><%= error %></span>
+        </div>
+      <% } %>
+
+      <form action="/admin/screenings" method="POST" id="screeningForm">
+        <div class="form-group">
+          <label for="movieId">Select Movie *</label>
+          <select id="movieId" name="movieId" class="form-control" required>
+            <option value="">-- Choose a movie --</option>
+            <% movies.forEach(movie => { %>
+              <option value="<%= movie._id %>" data-duration="<%= movie.duration %>">
+                <%= movie.title %> (<%= movie.duration %> mins | <%= movie.genre %>)
+              </option>
+            <% }) %>
+          </select>
+          <% if (movies.length === 0) { %>
+            <small class="text-danger">No active movies available. Please add a movie first.</small>
+          <% } %>
+        </div>
+
+        <div class="form-group">
+          <label for="hallId">Select Hall *</label>
+          <select id="hallId" name="hallId" class="form-control" required>
+            <option value="">-- Choose a hall --</option>
+            <% halls.forEach(hall => { %>
+              <option value="<%= hall._id %>">
+                <%= hall.name %> (<%= hall.rows * hall.columns %> seats | <%= hall.rows %> x <%= hall.columns %>)
+              </option>
+            <% }) %>
+          </select>
+          <% if (halls.length === 0) { %>
+            <small class="text-danger">No operational halls available. Please add a hall first.</small>
+          <% } %>
+        </div>
+
+        <div class="form-group">
+          <label for="startTime">Start Date & Time *</label>
+          <input 
+            type="datetime-local" 
+            id="startTime" 
+            name="startTime" 
+            class="form-control" 
+            required
+          >
+          <small class="text-muted">End time will be calculated automatically based on movie duration (+ 15 min cleaning buffer)</small>
+        </div>
+
+        <div id="calculatedEndTime" style="display: none; background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 1.25rem; border-radius: 10px; margin-bottom: 1.5rem; border-left: 4px solid var(--success-color);">
+          <strong style="color: var(--success-color);">Calculated End Time:</strong>
+          <span id="endTimeDisplay" style="font-size: 1.15rem; font-weight: 600; color: var(--primary-color); margin-left: 0.5rem;"></span>
+        </div>
+
+        <div class="alert alert-info">
+          <div>
+            <strong>Scheduling Rules:</strong>
+            <ul style="margin: 0.5rem 0 0 1.25rem; line-height: 1.8;">
+              <li>System automatically checks for scheduling conflicts</li>
+              <li>End time includes 15-minute buffer for hall cleaning</li>
+              <li>Halls under maintenance cannot be scheduled</li>
+              <li>Only active movies are available for scheduling</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button type="submit" class="btn btn-success" <%= movies.length === 0 || halls.length === 0 ? 'disabled' : '' %>>
+            Schedule Screening
+          </button>
+          <a href="/admin/screenings" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <% if (movies.length === 0 || halls.length === 0) { %>
+    <div class="card" style="border: 2px solid var(--warning-color);">
+      <div class="card-header" style="background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);">
+        <h2 style="color: var(--warning-color);">Prerequisites Required</h2>
+      </div>
+      <div class="card-body">
+        <p style="margin-bottom: 1rem; font-size: 1.05rem;">Before scheduling a screening, you need:</p>
+        <ul style="line-height: 2; font-size: 1rem;">
+          <% if (movies.length === 0) { %>
+            <li>At least one active movie required — <a href="/admin/movies/new" class="btn btn-sm btn-success">Add Movie</a></li>
+          <% } else { %>
+            <li style="color: var(--success-color);">Active movies available (<%= movies.length %>)</li>
+          <% } %>
+          <% if (halls.length === 0) { %>
+            <li>At least one operational hall required — <a href="/admin/halls/new" class="btn btn-sm btn-warning">Add Hall</a></li>
+          <% } else { %>
+            <li style="color: var(--success-color);">Operational halls available (<%= halls.length %>)</li>
+          <% } %>
+        </ul>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<script>
+  // Calculate and display end time dynamically
+  document.addEventListener('DOMContentLoaded', function() {
+    const movieSelect = document.getElementById('movieId');
+    const startTimeInput = document.getElementById('startTime');
+    const endTimeDiv = document.getElementById('calculatedEndTime');
+    const endTimeDisplay = document.getElementById('endTimeDisplay');
+    
+    function calculateEndTime() {
+      const selectedOption = movieSelect.options[movieSelect.selectedIndex];
+      const duration = parseInt(selectedOption.dataset.duration);
+      const startTime = new Date(startTimeInput.value);
+      
+      if (duration && startTime.getTime()) {
+        const endTime = new Date(startTime.getTime() + (duration + 15) * 60000);
+        endTimeDisplay.textContent = endTime.toLocaleString('en-US', { 
+          weekday: 'short', 
+          month: 'short', 
+          day: 'numeric', 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+        endTimeDiv.style.display = 'block';
+      } else {
+        endTimeDiv.style.display = 'none';
+      }
+    }
+    
+    movieSelect.addEventListener('change', calculateEndTime);
+    startTimeInput.addEventListener('change', calculateEndTime);
+
+    // Open date/time picker when clicking anywhere on the input (not just the icon)
+    startTimeInput.addEventListener('click', function() {
+      try {
+        if (typeof this.showPicker === 'function') {
+          this.showPicker();
+        }
+      } catch (e) {
+        // showPicker not supported (e.g. older browsers) – focus still helps
+      }
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>
+

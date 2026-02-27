@@ -1,0 +1,120 @@
+<%- include('../partials/header', { title: 'Screening Details' }) %>
+
+<div class="container" id="main-content">
+  <%- include('../partials/success', { success: typeof success !== 'undefined' ? success : null }) %>
+  <div class="page-header">
+    <div>
+      <h1>Screening Details</h1>
+      <% 
+        const now = new Date();
+        const isPast = new Date(screening.endTime) < now;
+        const isOngoing = new Date(screening.startTime) <= now && new Date(screening.endTime) >= now;
+      %>
+      <div style="margin-top: 0.75rem;">
+        <% if (isPast) { %>
+          <span class="badge badge-secondary">Completed</span>
+        <% } else if (isOngoing) { %>
+          <span class="badge badge-success">Currently Showing</span>
+        <% } else { %>
+          <span class="badge badge-info">Upcoming</span>
+        <% } %>
+      </div>
+    </div>
+    <div class="btn-group">
+      <% if (!isPast) { %>
+        <a href="/admin/screenings/<%= screening._id %>/edit" class="btn btn-warning">Edit</a>
+      <% } %>
+      <a href="/admin/screenings" class="btn btn-secondary">← Back to Screenings</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2><%= screening.movie.title %></h2>
+    </div>
+    <div class="card-body">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
+        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--accent-color);">
+          <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Movie</h3>
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);">
+            <a href="/admin/movies/<%= screening.movie._id %>" style="color: var(--primary-color); text-decoration: none;">
+              <%= screening.movie.title %>
+            </a>
+          </p>
+          <p class="text-muted" style="margin-top: 0.5rem;"><%= screening.movie.genre %> | <%= screening.movie.rating %>/10</p>
+        </div>
+        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--success-color);">
+          <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Hall</h3>
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);">
+            <a href="/admin/halls/<%= screening.hall._id %>" style="color: var(--primary-color); text-decoration: none;">
+              <%= screening.hall.name %>
+            </a>
+          </p>
+          <p class="text-muted" style="margin-top: 0.5rem;"><%= screening.hall.rows * screening.hall.columns %> seats</p>
+        </div>
+        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--warning-color);">
+          <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Date</h3>
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);">
+            <%= new Date(screening.startTime).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) %>
+          </p>
+        </div>
+        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--danger-color);">
+          <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Duration</h3>
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);"><%= screening.movie.duration %> mins</p>
+        </div>
+      </div>
+
+      <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 2rem; border-radius: 12px; border-left: 4px solid var(--success-color); margin-bottom: 2rem;">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;">
+          <div>
+            <h3 style="color: var(--success-color); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Start Time</h3>
+            <p style="font-size: 2.25rem; font-weight: 800; color: var(--primary-color);">
+              <%= new Date(screening.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) %>
+            </p>
+          </div>
+          <div>
+            <h3 style="color: var(--danger-color); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">End Time</h3>
+            <p style="font-size: 2.25rem; font-weight: 800; color: var(--primary-color);">
+              <%= new Date(screening.endTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) %>
+            </p>
+          </div>
+        </div>
+        <small style="color: var(--success-color); font-weight: 600; margin-top: 1rem; display: block;">End time includes 15-minute cleaning buffer</small>
+      </div>
+
+      <div style="padding: 1.5rem; background: #f8f9fa; border-radius: 12px;">
+        <p style="color: var(--light-text); font-size: 0.9rem;">
+          <strong style="color: var(--dark-text);">Created:</strong> <%= new Date(screening.createdAt).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' }) %>
+          <% if (screening.updatedAt && screening.updatedAt.toString() !== screening.createdAt.toString()) { %>
+            <br><strong style="color: var(--dark-text);">Last Updated:</strong> <%= new Date(screening.updatedAt).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' }) %>
+          <% } %>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <% if (screening.movie.description) { %>
+    <div class="card">
+      <div class="card-header">
+        <h2>Movie Synopsis</h2>
+      </div>
+      <div class="card-body">
+        <p style="line-height: 1.8; font-size: 1.05rem; color: var(--dark-text);"><%= screening.movie.description %></p>
+      </div>
+    </div>
+  <% } %>
+
+  <div class="card" style="border: 2px solid var(--danger-color); background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);">
+    <div class="card-header" style="background: linear-gradient(135deg, #fee 0%, #fdd 100%);">
+      <h2 style="color: var(--danger-color);">Cancel Screening</h2>
+    </div>
+    <div class="card-body">
+      <p class="text-muted mb-2">Delete this screening if it needs to be cancelled. This action cannot be undone.</p>
+      <form action="/admin/screenings/<%= screening._id %>/delete" method="POST" onsubmit="return confirmDelete('Are you sure you want to cancel this screening? Customers may have already purchased tickets.');">
+        <button type="submit" class="btn btn-danger">Cancel Screening</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,139 @@
+<%- include('../partials/header', { title: 'Movies' }) %>
+
+<div class="container" id="main-content">
+  <%- include('../partials/breadcrumb', { items: [{ label: 'Dashboard', href: '/dashboard' }, { label: 'Movies' }] }) %>
+  <%- include('../partials/success', { success: typeof success !== 'undefined' ? success : null }) %>
+  <div class="page-header">
+    <div>
+      <h1>Movies Management</h1>
+      <p style="color: var(--light-text); font-size: 1rem; margin-top: 0.5rem;">Manage your cinema's movie catalog</p>
+    </div>
+    <div class="btn-group">
+      <a href="/admin/genres" class="btn btn-secondary">Manage Genres</a>
+      <a href="/admin/movies/new" class="btn btn-success">Add New Movie</a>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-header">
+      <h2 style="margin: 0; font-size: 1.1rem;">Filters</h2>
+    </div>
+    <div class="card-body">
+      <form method="GET" action="/admin/movies" class="filter-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; align-items: end;">
+        <div>
+          <label for="search" style="display: block; font-size: 0.85rem; margin-bottom: 0.35rem; color: var(--light-text);">Search Title</label>
+          <input type="text" id="search" name="search" placeholder="Search movies..." value="<%= typeof filters !== 'undefined' && filters.search ? filters.search : '' %>" class="form-control" style="width: 100%; padding: 0.5rem;">
+        </div>
+        <div>
+          <label for="genre" style="display: block; font-size: 0.85rem; margin-bottom: 0.35rem; color: var(--light-text);">Genre</label>
+          <select id="genre" name="genre" class="form-control" style="width: 100%; padding: 0.5rem;">
+            <option value="">All Genres</option>
+            <% if (typeof genres !== 'undefined') { genres.forEach(g => { const name = typeof g === 'string' ? g : g.name; %>
+              <option value="<%= name %>" <%= typeof filters !== 'undefined' && filters.genre === name ? 'selected' : '' %>><%= name %></option>
+            <% }); } %>
+          </select>
+        </div>
+        <div>
+          <label for="status" style="display: block; font-size: 0.85rem; margin-bottom: 0.35rem; color: var(--light-text);">Status</label>
+          <select id="status" name="status" class="form-control" style="width: 100%; padding: 0.5rem;">
+            <option value="">All</option>
+            <option value="active" <%= typeof filters !== 'undefined' && filters.status === 'active' ? 'selected' : '' %>>Active</option>
+            <option value="inactive" <%= typeof filters !== 'undefined' && filters.status === 'inactive' ? 'selected' : '' %>>Inactive</option>
+          </select>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="submit" class="btn btn-success">Apply</button>
+          <a href="/admin/movies" class="btn btn-secondary">Clear</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Movie Stats Summary -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+    <div style="background: linear-gradient(135deg, #00d9a3 0%, #00b894 100%); color: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: var(--shadow);">
+      <div style="font-size: 0.8rem; opacity: 0.9; text-transform: uppercase; margin-bottom: 0.5rem;">Active</div>
+      <div style="font-size: 2.5rem; font-weight: 800;"><%= movies.filter(m => m.isActive).length %></div>
+    </div>
+    <div style="background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%); color: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: var(--shadow);">
+      <div style="font-size: 0.8rem; opacity: 0.9; text-transform: uppercase; margin-bottom: 0.5rem;">Inactive</div>
+      <div style="font-size: 2.5rem; font-weight: 800;"><%= movies.filter(m => !m.isActive).length %></div>
+    </div>
+    <div style="background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-light) 100%); color: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: var(--shadow);">
+      <div style="font-size: 0.8rem; opacity: 0.9; text-transform: uppercase; margin-bottom: 0.5rem;">Total</div>
+      <div style="font-size: 2.5rem; font-weight: 800;"><%= movies.length %></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>Movie Catalog</h2>
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <span class="badge badge-info"><%= movies.length %> movies</span>
+        <% if (movies.length > 0) { %>
+          <button onclick="exportTableToCSV('movies-export.csv')" class="btn btn-sm btn-export">Export</button>
+        <% } %>
+      </div>
+    </div>
+    <div class="card-body">
+      <% if (movies.length === 0) { %>
+        <div class="empty-state">
+          <h3>No movies in your catalog</h3>
+          <p>Start building your cinema's movie library by adding your first movie!</p>
+          <a href="/admin/movies/new" class="btn btn-success">Add Your First Movie</a>
+        </div>
+      <% } else { %>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Genre</th>
+                <th>Duration</th>
+                <th>Rating</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% movies.forEach(movie => { %>
+                <tr>
+                  <td><strong style="font-size: 1.05rem; color: var(--primary-color);"><%= movie.title %></strong></td>
+                  <td><span class="badge badge-secondary"><%= movie.genre || 'N/A' %></span></td>
+                  <td><%= movie.duration %> mins</td>
+                  <td>
+                    <span style="background: linear-gradient(135deg, #ffa801 0%, #ff9500 100%); color: white; padding: 0.25rem 0.65rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">
+                      <%= movie.rating %>/10
+                    </span>
+                  </td>
+                  <td>
+                    <% if (movie.isActive) { %>
+                      <span class="badge badge-success">Active</span>
+                    <% } else { %>
+                      <span class="badge badge-secondary">Inactive</span>
+                    <% } %>
+                  </td>
+                  <td style="color: var(--light-text);"><%= new Date(movie.createdAt).toLocaleDateString('en-CA') %></td>
+                  <td>
+                    <div class="table-actions">
+                      <a href="/admin/movies/<%= movie._id %>" class="btn btn-sm btn-primary">View</a>
+                      <a href="/admin/movies/<%= movie._id %>/edit" class="btn btn-sm btn-warning">Edit</a>
+                      <form action="/admin/movies/<%= movie._id %>/delete" method="POST" style="display: inline;" onsubmit="return confirmDelete('Are you sure you want to delete <%= movie.title %>? This action cannot be undone.');">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+

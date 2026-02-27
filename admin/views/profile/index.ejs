@@ -1,0 +1,198 @@
+<%- include('../partials/header', { title: 'My Profile' }) %>
+
+<style>
+  .profile-page { max-width: 100%; }
+  .profile-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  @media (max-width: 768px) {
+    .profile-cards-grid { grid-template-columns: 1fr; }
+  }
+  .profile-hero {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    color: white;
+    box-shadow: var(--shadow);
+  }
+  .profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 600;
+  }
+  .profile-hero-info h2 { font-size: 1.5rem; margin-bottom: 0.25rem; font-weight: 600; }
+  .profile-hero-info p { opacity: 0.9; font-size: 0.95rem; }
+  .profile-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm);
+  }
+  .profile-card-header {
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(to right, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .profile-card-header h2 { font-size: 1.1rem; font-weight: 600; color: var(--primary-color); margin: 0; }
+  .profile-card-body { padding: 1.5rem; }
+  .profile-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  .profile-form-grid.single-col { grid-template-columns: 1fr; }
+  @media (max-width: 600px) { .profile-form-grid { grid-template-columns: 1fr; } }
+  .profile-form-group { margin-bottom: 1.25rem; }
+  .profile-form-group:last-child { margin-bottom: 0; }
+  .profile-form-group.full-width { grid-column: 1 / -1; }
+  .profile-form-group label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--light-text);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.5rem;
+  }
+  .profile-form-group input.form-control {
+    padding: 0.65rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .profile-form-group input.form-control:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(71, 85, 105, 0.15);
+  }
+  .profile-form-group input.form-control:disabled {
+    background: #f1f5f9;
+    color: var(--light-text);
+    cursor: not-allowed;
+  }
+  .profile-readonly {
+    background: #f8fafc;
+    padding: 0.65rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-size: 0.95rem;
+    color: var(--light-text);
+  }
+  .profile-form-group small.text-muted {
+    margin-top: 0.35rem;
+    font-size: 0.8rem;
+  }
+  .profile-actions { margin-top: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap; }
+  .profile-actions .btn { padding: 0.65rem 1.5rem; font-weight: 600; border-radius: 8px; }
+</style>
+
+<div class="container" id="main-content">
+  <%- include('../partials/breadcrumb', { items: [{ label: 'Dashboard', href: '/dashboard' }, { label: 'My Profile' }] }) %>
+  <%- include('../partials/success', { success: typeof success !== 'undefined' ? success : null }) %>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert alert-danger"><%= error %></div>
+  <% } %>
+
+  <div class="page-header">
+    <div>
+      <h1>My Profile</h1>
+      <p style="color: var(--light-text); font-size: 1rem; margin-top: 0.5rem;">Manage your account settings</p>
+    </div>
+    <a href="/dashboard" class="btn btn-secondary">← Back to Dashboard</a>
+  </div>
+
+  <div class="profile-page">
+    <!-- Profile Hero -->
+    <div class="profile-hero">
+      <div class="profile-avatar"><%= (profile.name || 'U').charAt(0).toUpperCase() %></div>
+      <div class="profile-hero-info">
+        <h2><%= profile.name %></h2>
+        <p><%= profile.email %></p>
+        <span style="margin-top: 0.5rem; display: inline-block; background: rgba(255,255,255,0.25); padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; text-transform: capitalize;"><%= profile.role %></span>
+      </div>
+    </div>
+
+    <!-- Two-column layout: Account Info left, Change Password right -->
+    <div class="profile-cards-grid">
+    <!-- Account Information -->
+    <div class="profile-card">
+      <div class="profile-card-header">
+        <h2>Account Information</h2>
+      </div>
+      <div class="profile-card-body">
+        <form action="/profile" method="POST">
+          <div class="profile-form-grid single-col">
+            <div class="profile-form-group">
+              <label for="name">Full Name *</label>
+              <input type="text" id="name" name="name" class="form-control" value="<%= profile.name %>" required>
+            </div>
+            <div class="profile-form-group">
+              <label for="email">Email *</label>
+              <input type="email" id="email" name="email" class="form-control" value="<%= profile.email %>" required>
+            </div>
+            <div class="profile-form-group">
+              <label>Username</label>
+              <div class="profile-readonly"><%= profile.username %></div>
+              <small class="text-muted">Username cannot be changed</small>
+            </div>
+            <div class="profile-form-group">
+              <label>Role</label>
+              <div class="profile-readonly"><%= profile.role %></div>
+            </div>
+          </div>
+          <div class="profile-actions">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Change Password -->
+    <div class="profile-card">
+      <div class="profile-card-header">
+        <h2>Change Password</h2>
+      </div>
+      <div class="profile-card-body">
+        <form action="/profile/password" method="POST">
+          <div class="profile-form-grid single-col">
+            <div class="profile-form-group">
+              <label for="currentPassword">Current Password *</label>
+              <input type="password" id="currentPassword" name="currentPassword" class="form-control" required>
+            </div>
+            <div class="profile-form-group">
+              <label for="newPassword">New Password *</label>
+              <input type="password" id="newPassword" name="newPassword" class="form-control" minlength="6" required>
+              <small class="text-muted">At least 6 characters</small>
+            </div>
+            <div class="profile-form-group">
+              <label for="confirmPassword">Confirm New Password *</label>
+              <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" minlength="6" required>
+            </div>
+          </div>
+          <div class="profile-actions">
+            <button type="submit" class="btn btn-warning">Change Password</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

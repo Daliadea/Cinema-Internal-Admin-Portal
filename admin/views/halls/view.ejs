@@ -1,0 +1,142 @@
+<%- include('../partials/header', { title: hall.name }) %>
+
+<div class="container" id="main-content">
+  <%- include('../partials/success', { success: typeof success !== 'undefined' ? success : null }) %>
+  <div class="page-header">
+    <div>
+      <h1><%= hall.name %></h1>
+      <div style="margin-top: 0.75rem;">
+        <% if (hall.isUnderMaintenance) { %>
+          <span class="badge badge-danger">Under Maintenance</span>
+        <% } else { %>
+          <span class="badge badge-success">Operational</span>
+        <% } %>
+        <span class="badge badge-secondary" style="margin-left: 0.5rem;"><%= hall.rows * hall.columns %> seats</span>
+      </div>
+    </div>
+    <div class="btn-group">
+      <a href="/admin/halls/<%= hall._id %>/edit" class="btn btn-warning">Edit Hall</a>
+      <a href="/admin/halls" class="btn btn-secondary">← Back to Halls</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>Hall Information</h2>
+    </div>
+    <div class="card-body">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
+        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--accent-color);">
+          <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Hall Name</h3>
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);"><%= hall.name %></p>
+        </div>
+        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--success-color);">
+          <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Total Capacity</h3>
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);"><%= hall.rows * hall.columns %> seats</p>
+        </div>
+        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--warning-color);">
+          <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Layout</h3>
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);"><%= hall.rows %> x <%= hall.columns %></p>
+        </div>
+        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--danger-color);">
+          <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Wheelchair Accessible</h3>
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);">
+            <% if (hall.wheelchairSeats && hall.wheelchairSeats.length > 0) { %>
+              <%= hall.wheelchairSeats.length %> seats
+            <% } else { %>
+              None
+            <% } %>
+          </p>
+        </div>
+      </div>
+
+      <% if (hall.wheelchairSeats && hall.wheelchairSeats.length > 0) { %>
+        <div style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--accent-color); margin-bottom: 2rem;">
+          <h3 style="color: var(--accent-color); font-size: 1rem; margin-bottom: 1rem; font-weight: 700;">Wheelchair Accessible Seats</h3>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <% hall.wheelchairSeats.forEach(seat => { %>
+              <span class="badge badge-info" style="font-size: 0.9rem; padding: 0.5rem 0.85rem;"><%= seat %></span>
+            <% }) %>
+          </div>
+        </div>
+      <% } %>
+
+      <div style="padding: 1.5rem; background: #f8f9fa; border-radius: 12px;">
+        <p style="color: var(--light-text); font-size: 0.9rem;">
+          <strong style="color: var(--dark-text);">Created:</strong> <%= new Date(hall.createdAt).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' }) %>
+          <% if (hall.updatedAt && hall.updatedAt.toString() !== hall.createdAt.toString()) { %>
+            <br><strong style="color: var(--dark-text);">Last Updated:</strong> <%= new Date(hall.updatedAt).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' }) %>
+          <% } %>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>Upcoming Screenings</h2>
+      <span class="badge <%= upcomingScreenings.length > 0 ? 'badge-success' : 'badge-secondary' %>"><%= upcomingScreenings.length %> scheduled</span>
+    </div>
+    <div class="card-body">
+      <% if (upcomingScreenings.length === 0) { %>
+        <div class="empty-state">
+          <h3>No upcoming screenings</h3>
+          <p>This hall has no scheduled screenings yet.</p>
+          <% if (!hall.isUnderMaintenance) { %>
+            <a href="/admin/screenings/new" class="btn btn-primary">Schedule a Screening</a>
+          <% } else { %>
+            <p class="text-warning">Hall is under maintenance and cannot be scheduled.</p>
+          <% } %>
+        </div>
+      <% } else { %>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Movie</th>
+                <th>Date & Time</th>
+                <th>Duration</th>
+                <th>End Time</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% upcomingScreenings.forEach(screening => { %>
+                <tr>
+                  <td><strong style="font-size: 1.05rem; color: var(--primary-color);"><%= screening.movie.title %></strong></td>
+                  <td>
+                    <strong style="color: var(--dark-text);"><%= new Date(screening.startTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) %></strong><br>
+                    <strong style="color: var(--accent-color); font-size: 1.05rem;"><%= new Date(screening.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) %></strong>
+                  </td>
+                  <td><%= screening.movie.duration %> mins</td>
+                  <td><strong style="color: var(--light-text);"><%= new Date(screening.endTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) %></strong></td>
+                  <td>
+                    <div class="table-actions">
+                      <a href="/admin/screenings/<%= screening._id %>" class="btn btn-sm btn-primary">View</a>
+                      <a href="/admin/screenings/<%= screening._id %>/edit" class="btn btn-sm btn-warning">Edit</a>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="card" style="border: 2px solid var(--danger-color); background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);">
+    <div class="card-header" style="background: linear-gradient(135deg, #fee 0%, #fdd 100%);">
+      <h2 style="color: var(--danger-color);">Danger Zone</h2>
+    </div>
+    <div class="card-body">
+      <p class="text-muted mb-2">Once you delete a hall, there is no going back. This will permanently remove all data associated with this hall.</p>
+      <form action="/admin/halls/<%= hall._id %>/delete" method="POST" onsubmit="return confirmDelete('FINAL WARNING: Are you absolutely sure you want to permanently delete <%= hall.name %>? This action cannot be undone!');">
+        <button type="submit" class="btn btn-danger">Delete Hall Permanently</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+

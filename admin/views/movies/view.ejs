@@ -1,0 +1,136 @@
+<%- include('../partials/header', { title: movie.title }) %>
+
+<div class="container" id="main-content">
+  <%- include('../partials/success', { success: typeof success !== 'undefined' ? success : null }) %>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert alert-danger" role="alert"><%= error %></div>
+  <% } %>
+  <div class="page-header">
+    <div>
+      <h1><%= movie.title %></h1>
+      <div style="margin-top: 0.75rem;">
+        <% if (movie.isActive) { %>
+          <span class="badge badge-success">Active</span>
+        <% } else { %>
+          <span class="badge badge-secondary">Inactive</span>
+        <% } %>
+        <span class="badge badge-secondary" style="margin-left: 0.5rem;"><%= movie.genre || 'N/A' %></span>
+      </div>
+    </div>
+    <div class="btn-group">
+      <a href="/admin/movies/<%= movie._id %>/edit" class="btn btn-warning">Edit Movie</a>
+      <a href="/admin/movies" class="btn btn-secondary">← Back to Movies</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>Movie Information</h2>
+    </div>
+    <div class="card-body">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
+        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--accent-color);">
+          <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Title</h3>
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);"><%= movie.title %></p>
+        </div>
+        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--success-color);">
+          <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Genre</h3>
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);"><%= movie.genre || 'N/A' %></p>
+        </div>
+        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--warning-color);">
+          <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Duration</h3>
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);"><%= movie.duration %> mins</p>
+        </div>
+        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--danger-color);">
+          <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Rating</h3>
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);"><%= movie.rating %>/10</p>
+        </div>
+      </div>
+
+      <% if (movie.description) { %>
+        <div style="background: linear-gradient(135deg, #fff5f7 0%, #ffffff 100%); padding: 2rem; border-radius: 12px; border-left: 4px solid var(--accent-color);">
+          <h3 style="color: var(--primary-color); font-size: 1.1rem; margin-bottom: 1rem; font-weight: 700;">Description</h3>
+          <p style="line-height: 1.8; color: var(--dark-text); font-size: 1.05rem;"><%= movie.description %></p>
+        </div>
+      <% } %>
+
+      <div style="margin-top: 2rem; padding: 1.5rem; background: #f8f9fa; border-radius: 12px;">
+        <p style="color: var(--light-text); font-size: 0.9rem;">
+          <strong style="color: var(--dark-text);">Created:</strong> <%= new Date(movie.createdAt).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' }) %>
+          <% if (movie.updatedAt && movie.updatedAt.toString() !== movie.createdAt.toString()) { %>
+            <br><strong style="color: var(--dark-text);">Last Updated:</strong> <%= new Date(movie.updatedAt).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' }) %>
+          <% } %>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>Upcoming Screenings</h2>
+      <span class="badge <%= upcomingScreenings.length > 0 ? 'badge-success' : 'badge-secondary' %>"><%= upcomingScreenings.length %> scheduled</span>
+    </div>
+    <div class="card-body">
+      <% if (upcomingScreenings.length === 0) { %>
+        <div class="empty-state">
+          <h3>No upcoming screenings</h3>
+          <p>This movie has no scheduled screenings yet. Schedule one now!</p>
+          <a href="/admin/screenings/new" class="btn btn-primary">Schedule a Screening</a>
+        </div>
+      <% } else { %>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Date & Time</th>
+                <th>Hall</th>
+                <th>End Time</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% upcomingScreenings.forEach(screening => { %>
+                <tr>
+                  <td>
+                    <strong style="color: var(--primary-color);"><%= new Date(screening.startTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) %></strong><br>
+                    <span style="color: var(--accent-color); font-weight: 600; font-size: 1.05rem;"><%= new Date(screening.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) %></span>
+                  </td>
+                  <td><span class="badge badge-secondary"><%= screening.hall.name %></span></td>
+                  <td><strong style="color: var(--light-text);"><%= new Date(screening.endTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) %></strong></td>
+                  <td>
+                    <div class="table-actions">
+                      <a href="/admin/screenings/<%= screening._id %>" class="btn btn-sm btn-primary">View</a>
+                      <a href="/admin/screenings/<%= screening._id %>/edit" class="btn btn-sm btn-warning">Edit</a>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="card" style="border: 2px solid var(--danger-color); background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);">
+    <div class="card-header" style="background: linear-gradient(135deg, #fee 0%, #fdd 100%);">
+      <h2 style="color: var(--danger-color);">Danger Zone</h2>
+    </div>
+    <div class="card-body">
+      <p class="text-muted mb-2">Once you delete a movie, there is no going back. This will permanently remove all data associated with this movie.</p>
+      <% if (upcomingScreenings.length > 0) { %>
+        <div class="alert alert-warning">
+          <span>Cannot delete this movie because it has <strong><%= upcomingScreenings.length %> upcoming screening(s)</strong>. Please cancel them first.</span>
+        </div>
+        <button class="btn btn-danger" disabled style="opacity: 0.5; cursor: not-allowed;">Delete Movie (Locked)</button>
+      <% } else { %>
+        <form action="/admin/movies/<%= movie._id %>/delete" method="POST" onsubmit="return confirmDelete('FINAL WARNING: Are you absolutely sure you want to permanently delete <%= movie.title %>? This action cannot be undone!');">
+          <button type="submit" class="btn btn-danger">Delete Movie Permanently</button>
+        </form>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+

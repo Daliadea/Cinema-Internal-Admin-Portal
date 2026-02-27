@@ -1,0 +1,512 @@
+<%- include('../partials/header', { title: 'Edit Hall' }) %>
+
+<style>
+  .seat-map-container {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 2rem;
+    margin: 2rem 0;
+    text-align: center;
+  }
+
+  .screen {
+    background: linear-gradient(to bottom, #2c3e50 0%, #34495e 100%);
+    color: white;
+    padding: 0.75rem;
+    border-radius: 10px 10px 0 0;
+    margin-bottom: 2rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  }
+
+  .seat-grid {
+    display: inline-block;
+    gap: 8px;
+    padding: 1rem;
+  }
+
+  .seat-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+
+  .row-label {
+    width: 30px;
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 14px;
+  }
+
+  .seat {
+    width: 35px;
+    height: 35px;
+    border: 2px solid #bdc3c7;
+    border-radius: 8px 8px 0 0;
+    background: linear-gradient(to bottom, #3498db 0%, #2980b9 100%);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: white;
+    font-weight: bold;
+    position: relative;
+  }
+
+  .seat:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .seat.wheelchair {
+    background: linear-gradient(to bottom, #e74c3c 0%, #c0392b 100%);
+    border-color: #c0392b;
+  }
+
+  .seat.wheelchair::after {
+    content: 'W';
+    font-size: 16px;
+  }
+
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 2px solid #ddd;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .legend-box {
+    width: 30px;
+    height: 30px;
+    border-radius: 5px;
+    border: 2px solid #bdc3c7;
+  }
+
+  .legend-box.regular {
+    background: linear-gradient(to bottom, #3498db 0%, #2980b9 100%);
+  }
+
+<style>
+  .seat-map-container {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 16px;
+    padding: 2.5rem;
+    margin: 2rem 0;
+    text-align: center;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+  }
+
+  .screen {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    padding: 1rem;
+    border-radius: 12px 12px 0 0;
+    margin-bottom: 2.5rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    font-size: 1.1rem;
+    text-transform: uppercase;
+  }
+
+  .seat-grid {
+    display: inline-block;
+    gap: 10px;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .seat-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: center;
+  }
+
+  .row-label {
+    width: 35px;
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 15px;
+    letter-spacing: 0.5px;
+  }
+
+  .seat {
+    width: 38px;
+    height: 38px;
+    border: 2px solid #bdc3c7;
+    border-radius: 10px 10px 2px 2px;
+    background: linear-gradient(to bottom, var(--accent-color) 0%, #d63851 100%);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: white;
+    font-weight: 700;
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .seat:hover {
+    transform: scale(1.15) translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+    z-index: 10;
+  }
+
+  .seat.wheelchair {
+    background: linear-gradient(to bottom, #00d9a3 0%, #00b894 100%);
+    border-color: #00b894;
+    box-shadow: 0 4px 8px rgba(0, 217, 163, 0.3);
+  }
+
+  .seat.wheelchair::after {
+    content: 'W';
+    font-size: 18px;
+  }
+
+  .seat.wheelchair:hover {
+    transform: scale(1.15) translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 217, 163, 0.5);
+  }
+
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .legend-box {
+    width: 35px;
+    height: 35px;
+    border-radius: 8px 8px 2px 2px;
+    border: 2px solid #bdc3c7;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .legend-box.regular {
+    background: linear-gradient(to bottom, var(--accent-color) 0%, #d63851 100%);
+  }
+
+  .legend-box.wheelchair {
+    background: linear-gradient(to bottom, #00d9a3 0%, #00b894 100%);
+    border-color: #00b894;
+  }
+
+  .legend-item span {
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: 0.95rem;
+  }
+
+  .capacity-display {
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    text-align: center;
+    border: 2px solid var(--success-color);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .capacity-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--success-color);
+  }
+
+  .empty-seat-map {
+    padding: 4rem;
+    color: var(--light-text);
+    font-style: italic;
+    font-size: 1.05rem;
+  }
+
+  .quick-tips-card .card-body {
+    text-align: center;
+  }
+  .quick-tips-card ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0 auto;
+    display: inline-block;
+    text-align: left;
+  }
+</style>
+
+<div class="container" id="main-content">
+  <div class="page-header">
+    <h1>Edit Hall</h1>
+    <div class="btn-group">
+      <a href="/admin/halls/<%= hall._id %>" class="btn btn-secondary">← Back to Hall</a>
+      <a href="/admin/halls" class="btn btn-secondary">All Halls</a>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+    <!-- Form Column -->
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <h2>Hall Configuration</h2>
+        </div>
+        <div class="card-body">
+          <% if (error) { %>
+            <div class="alert alert-danger">
+              <%= error %>
+            </div>
+          <% } %>
+
+          <form action="/admin/halls/<%= hall._id %>" method="POST" id="hallForm">
+            <div class="form-group">
+              <label for="name">Hall Name *</label>
+              <input 
+                type="text" 
+                id="name" 
+                name="name" 
+                class="form-control" 
+                value="<%= hall.name %>"
+                required
+              >
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="rows">Number of Rows *</label>
+                <input 
+                  type="number" 
+                  id="rows" 
+                  name="rows" 
+                  class="form-control" 
+                  value="<%= hall.rows %>"
+                  min="1"
+                  max="20"
+                  required
+                  oninput="generateSeatMap()"
+                >
+              </div>
+
+              <div class="form-group">
+                <label for="columns">Seats per Row *</label>
+                <input 
+                  type="number" 
+                  id="columns" 
+                  name="columns" 
+                  class="form-control" 
+                  value="<%= hall.columns %>"
+                  min="1"
+                  max="30"
+                  required
+                  oninput="generateSeatMap()"
+                >
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="wheelchairSeats">Wheelchair Accessible Seats</label>
+              <input 
+                type="text" 
+                id="wheelchairSeats" 
+                name="wheelchairSeats" 
+                class="form-control" 
+                value="<%= hall.wheelchairSeats ? hall.wheelchairSeats.join(', ') : '' %>"
+                readonly
+              >
+              <small class="text-muted">👆 Click seats in the visual map on the right to mark them as wheelchair accessible</small>
+            </div>
+
+            <div class="form-group">
+              <div class="checkbox-group">
+                <input 
+                  type="checkbox" 
+                  id="isUnderMaintenance" 
+                  name="isUnderMaintenance"
+                  <%= hall.isUnderMaintenance ? 'checked' : '' %>
+                >
+                <label for="isUnderMaintenance">Under Maintenance</label>
+              </div>
+              <small class="text-muted">Note: You cannot set this hall to maintenance if it has future screenings scheduled.</small>
+            </div>
+
+            <div class="btn-group">
+              <button type="submit" class="btn btn-success">Save Changes</button>
+              <a href="/admin/halls/<%= hall._id %>" class="btn btn-secondary">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card quick-tips-card">
+        <div class="card-header">
+          <h2>Quick Tips</h2>
+        </div>
+        <div class="card-body">
+          <ul style="line-height: 2;">
+            <li>Click any seat to toggle wheelchair accessibility</li>
+            <li>Green seats (W) are wheelchair accessible</li>
+            <li>The seat map updates as you change rows and columns</li>
+            <li>Changes will affect future bookings only</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visual Seat Map Column -->
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <h2>Visual Seat Map</h2>
+          <div id="capacityBadge" class="badge badge-info"><%= hall.rows * hall.columns %> seats</div>
+        </div>
+        <div class="card-body">
+          <div class="capacity-display">
+            <div style="color: #7f8c8d; font-size: 0.9rem; margin-bottom: 0.5rem;">Total Capacity</div>
+            <div class="capacity-number" id="totalCapacity"><%= hall.rows * hall.columns %></div>
+            <div style="color: #7f8c8d; font-size: 0.9rem; margin-top: 0.5rem;">
+              <span id="wheelchairCount"><%= hall.wheelchairSeats ? hall.wheelchairSeats.length : 0 %></span> wheelchair seats
+            </div>
+          </div>
+
+          <div class="seat-map-container">
+            <div class="screen">SCREEN</div>
+            <div id="seatMap" class="seat-grid">
+              <div class="empty-seat-map">Loading seat map...</div>
+            </div>
+            <div class="legend">
+              <div class="legend-item">
+                <div class="legend-box regular"></div>
+                <span>Regular Seat</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-box wheelchair"></div>
+                <span>Wheelchair Accessible</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let wheelchairSeats = new Set();
+
+  // Load existing wheelchair seats
+  const existingWheelchairSeats = '<%= hall.wheelchairSeats ? hall.wheelchairSeats.join(",") : "" %>';
+  if (existingWheelchairSeats) {
+    existingWheelchairSeats.split(',').forEach(seat => {
+      if (seat.trim()) wheelchairSeats.add(seat.trim());
+    });
+  }
+
+  function generateSeatMap() {
+    const rows = parseInt(document.getElementById('rows').value) || 0;
+    const columns = parseInt(document.getElementById('columns').value) || 0;
+    const seatMapDiv = document.getElementById('seatMap');
+    
+    if (rows === 0 || columns === 0 || rows > 20 || columns > 30) {
+      seatMapDiv.innerHTML = '<div class="empty-seat-map">Enter valid rows (1-20) and columns (1-30)</div>';
+      updateCapacity(0, 0);
+      return;
+    }
+
+    const totalSeats = rows * columns;
+    updateCapacity(totalSeats, wheelchairSeats.size);
+
+    let html = '';
+    
+    for (let row = 0; row < rows; row++) {
+      const rowLabel = String.fromCharCode(65 + row);
+      html += '<div class="seat-row">';
+      html += `<div class="row-label">${rowLabel}</div>`;
+      
+      for (let col = 1; col <= columns; col++) {
+        const seatId = `${rowLabel}${col}`;
+        const isWheelchair = wheelchairSeats.has(seatId);
+        html += `<div class="seat ${isWheelchair ? 'wheelchair' : ''}" 
+                      onclick="toggleWheelchair('${seatId}')"
+                      title="Seat ${seatId} - Click to toggle wheelchair accessibility">
+                 </div>`;
+      }
+      
+      html += '</div>';
+    }
+    
+    seatMapDiv.innerHTML = html;
+  }
+
+  function toggleWheelchair(seatId) {
+    if (wheelchairSeats.has(seatId)) {
+      wheelchairSeats.delete(seatId);
+    } else {
+      wheelchairSeats.add(seatId);
+    }
+    
+    updateWheelchairInput();
+    generateSeatMap();
+  }
+
+  function updateWheelchairInput() {
+    const wheelchairInput = document.getElementById('wheelchairSeats');
+    wheelchairInput.value = Array.from(wheelchairSeats).sort().join(', ');
+  }
+
+  function updateCapacity(total, wheelchair) {
+    document.getElementById('totalCapacity').textContent = total;
+    document.getElementById('capacityBadge').textContent = total + ' seats';
+    document.getElementById('wheelchairCount').textContent = wheelchair;
+  }
+
+  // Generate initial seat map on page load
+  window.addEventListener('DOMContentLoaded', function() {
+    generateSeatMap();
+  });
+
+  // Validate form before submission
+  document.getElementById('hallForm').addEventListener('submit', function(e) {
+    const rows = parseInt(document.getElementById('rows').value);
+    const columns = parseInt(document.getElementById('columns').value);
+    
+    if (rows > 20 || columns > 30) {
+      e.preventDefault();
+      alert('Maximum hall size is 20 rows × 30 seats');
+      return false;
+    }
+    
+    if (rows < 1 || columns < 1) {
+      e.preventDefault();
+      alert('Hall must have at least 1 row and 1 seat per row');
+      return false;
+    }
+  });
+</script>
+
+<%- include('../partials/footer') %>

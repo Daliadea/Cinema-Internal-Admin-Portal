@@ -1,0 +1,125 @@
+<%- include('../partials/header', { title: 'Edit Movie' }) %>
+
+<div class="container" id="main-content">
+  <div class="page-header">
+    <div>
+      <h1>Edit Movie</h1>
+      <p style="color: var(--light-text); font-size: 1rem; margin-top: 0.5rem;">Update movie information</p>
+    </div>
+    <div class="btn-group">
+      <a href="/admin/movies/<%= movie._id %>" class="btn btn-secondary">← Back to Movie</a>
+      <a href="/admin/movies" class="btn btn-secondary">All Movies</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>Edit Movie Information</h2>
+    </div>
+    <div class="card-body">
+      <% if (error) { %>
+        <div class="alert alert-danger">
+          <span><%= error %></span>
+        </div>
+      <% } %>
+
+      <form action="/admin/movies/<%= movie._id %>" method="POST" id="editMovieForm">
+        <div class="form-group">
+          <label for="title">Movie Title *</label>
+          <input 
+            type="text" 
+            id="title" 
+            name="title" 
+            class="form-control" 
+            value="<%= movie.title %>"
+            placeholder="e.g., The Dark Knight, Inception, Parasite"
+            required
+            autofocus
+          >
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+          <div class="form-group">
+            <label for="genre">Genre *</label>
+            <select id="genre" name="genre" class="form-control" required>
+              <option value="">Select a genre</option>
+              <% if (typeof genres !== 'undefined') { genres.forEach(g => { %>
+                <option value="<%= g.name %>" <%= movie.genre === g.name ? 'selected' : '' %>><%= g.name %></option>
+              <% }); } %>
+              <% if (movie.genre && typeof genres !== 'undefined' && !genres.some(g => g.name === movie.genre)) { %>
+                <option value="<%= movie.genre %>" selected><%= movie.genre %></option>
+              <% } %>
+            </select>
+            <small class="text-muted"><a href="/admin/genres" style="color: var(--accent-color);">Manage genres</a></small>
+          </div>
+
+          <div class="form-group">
+            <label for="duration">Duration (minutes) *</label>
+            <input 
+              type="number" 
+              id="duration" 
+              name="duration" 
+              class="form-control" 
+              value="<%= movie.duration %>"
+              placeholder="e.g., 120"
+              min="1"
+              max="300"
+              required
+            >
+            <small class="text-muted">Changing duration may affect existing screenings</small>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="rating">Rating (0-10) *</label>
+          <input 
+            type="number" 
+            id="rating" 
+            name="rating" 
+            class="form-control" 
+            value="<%= movie.rating %>"
+            placeholder="e.g., 8.5"
+            min="0"
+            max="10"
+            step="0.1"
+            required
+          >
+          <small class="text-muted">Industry standard rating out of 10</small>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea 
+            id="description" 
+            name="description" 
+            class="form-control" 
+            placeholder="Enter a brief description of the movie plot, themes, and key details..."
+            rows="5"
+          ><%= movie.description || '' %></textarea>
+          <small class="text-muted">Optional: Provide a synopsis for staff reference</small>
+        </div>
+
+        <div class="form-group">
+          <div class="checkbox-group">
+            <input 
+              type="checkbox" 
+              id="isActive" 
+              name="isActive"
+              <%= movie.isActive ? 'checked' : '' %>
+            >
+            <label for="isActive">Active (Available for screening)</label>
+          </div>
+          <small class="text-muted">Only active movies can be scheduled for screenings</small>
+        </div>
+
+        <div class="btn-group">
+          <button type="submit" class="btn btn-success">Save Changes</button>
+          <a href="/admin/movies/<%= movie._id %>" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+

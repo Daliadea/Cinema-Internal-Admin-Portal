@@ -1,0 +1,122 @@
+<%- include('../partials/header', { title: 'Edit Screening' }) %>
+
+<div class="container" id="main-content">
+  <div class="page-header">
+    <h1>Edit Screening</h1>
+    <div class="btn-group">
+      <a href="/admin/screenings/<%= screening._id %>" class="btn btn-secondary">← Back to Screening</a>
+      <a href="/admin/screenings" class="btn btn-secondary">All Screenings</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <% if (error) { %>
+        <div class="alert alert-danger">
+          <%= error %>
+        </div>
+      <% } %>
+
+      <form action="/admin/screenings/<%= screening._id %>" method="POST">
+        <div class="form-group">
+          <label for="movieId">Select Movie *</label>
+          <select id="movieId" name="movieId" class="form-control" required>
+            <option value="">-- Choose a movie --</option>
+            <% movies.forEach(movie => { %>
+              <option value="<%= movie._id %>" <%= movie._id.toString() === screening.movie._id.toString() ? 'selected' : '' %>>
+                <%= movie.title %> (<%= movie.duration %> mins, <%= movie.genre %>)
+              </option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="hallId">Select Hall *</label>
+          <select id="hallId" name="hallId" class="form-control" required>
+            <option value="">-- Choose a hall --</option>
+            <% halls.forEach(hall => { %>
+              <option value="<%= hall._id %>" <%= hall._id.toString() === screening.hall._id.toString() ? 'selected' : '' %>>
+                <%= hall.name %> (<%= hall.rows * hall.columns %> seats)
+                <% if (hall.isUnderMaintenance) { %> - MAINTENANCE<% } %>
+              </option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="startTime">Start Date & Time *</label>
+          <%
+            // Format the date for datetime-local input (YYYY-MM-DDTHH:MM)
+            const startDate = new Date(screening.startTime);
+            const year = startDate.getFullYear();
+            const month = String(startDate.getMonth() + 1).padStart(2, '0');
+            const day = String(startDate.getDate()).padStart(2, '0');
+            const hours = String(startDate.getHours()).padStart(2, '0');
+            const minutes = String(startDate.getMinutes()).padStart(2, '0');
+            const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+          %>
+          <input 
+            type="datetime-local" 
+            id="startTime" 
+            name="startTime" 
+            class="form-control" 
+            value="<%= formattedDateTime %>"
+            required
+          >
+          <small class="text-muted">The system will automatically calculate end time based on movie duration (+ 15 min buffer for cleaning)</small>
+        </div>
+
+        <div class="alert alert-info">
+          <strong>Important Notes:</strong>
+          <ul style="margin: 0.5rem 0 0 1.5rem;">
+            <li>The system will check for scheduling conflicts automatically</li>
+            <li>Changing the movie will recalculate the end time</li>
+            <li>End time includes a 15-minute buffer for hall cleaning</li>
+          </ul>
+        </div>
+
+        <div class="btn-group">
+          <button type="submit" class="btn btn-success">Save Changes</button>
+          <a href="/admin/screenings/<%= screening._id %>" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>Current Screening Info</h2>
+    </div>
+    <div class="card-body">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <div>
+          <strong>Movie:</strong> <%= screening.movie.title %>
+        </div>
+        <div>
+          <strong>Hall:</strong> <%= screening.hall.name %>
+        </div>
+        <div>
+          <strong>Start:</strong> <%= new Date(screening.startTime).toLocaleString() %>
+        </div>
+        <div>
+          <strong>End:</strong> <%= new Date(screening.endTime).toLocaleString() %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var startTimeInput = document.getElementById('startTime');
+    if (startTimeInput) {
+      startTimeInput.addEventListener('click', function() {
+        try {
+          if (typeof this.showPicker === 'function') this.showPicker();
+        } catch (e) {}
+      });
+    }
+  });
+</script>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,12 @@
+<% if (typeof items !== 'undefined' && items && items.length > 0) { %>
+  <nav aria-label="Breadcrumb" class="breadcrumb" style="margin-bottom: 1rem; font-size: 0.9rem;">
+    <% items.forEach((item, i) => { %>
+      <% if (i > 0) { %><span style="color: var(--light-text); margin: 0 0.35rem;">/</span><% } %>
+      <% if (item.href) { %>
+        <a href="<%= item.href %>" style="color: var(--accent-color); text-decoration: none;"><%= item.label %></a>
+      <% } else { %>
+        <span style="color: var(--dark-text); font-weight: 500;"><%= item.label %></span>
+      <% } %>
+    <% }) %>
+  </nav>
+<% } %>

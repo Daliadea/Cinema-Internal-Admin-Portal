@@ -1,0 +1,121 @@
+<%- include('../partials/header', { title: 'Add New Movie' }) %>
+
+<div class="container" id="main-content">
+  <%- include('../partials/breadcrumb', { items: [{ label: 'Dashboard', href: '/dashboard' }, { label: 'Movies', href: '/admin/movies' }, { label: 'Add Movie' }] }) %>
+  <div class="page-header">
+    <div>
+      <h1>Add New Movie</h1>
+      <p style="color: var(--light-text); font-size: 1rem; margin-top: 0.5rem;">Add a new movie to your cinema catalog</p>
+    </div>
+    <a href="/admin/movies" class="btn btn-secondary">← Back to Movies</a>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>Movie Information</h2>
+    </div>
+    <div class="card-body">
+      <% if (error) { %>
+        <div class="alert alert-danger">
+          <span><%= error %></span>
+        </div>
+      <% } %>
+
+      <form action="/admin/movies" method="POST" id="movieForm">
+        <div class="form-group">
+          <label for="title">Movie Title *</label>
+          <input 
+            type="text" 
+            id="title" 
+            name="title" 
+            class="form-control" 
+            placeholder="e.g., The Dark Knight, Inception, Parasite"
+            required
+            autofocus
+          >
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+          <div class="form-group">
+            <label for="genre">Genre *</label>
+            <select id="genre" name="genre" class="form-control" required>
+              <option value="">Select a genre</option>
+              <% if (typeof genres !== 'undefined') { genres.forEach(g => { %>
+                <option value="<%= g.name %>"><%= g.name %></option>
+              <% }); } %>
+            </select>
+            <% if (typeof genres !== 'undefined' && genres.length === 0) { %>
+              <small class="text-muted" style="color: var(--warning-color);">No genres yet. <a href="/admin/genres/new">Add your first genre</a> before adding movies.</small>
+            <% } else { %>
+              <small class="text-muted"><a href="/admin/genres/new" style="color: var(--accent-color);">Add new genre</a></small>
+            <% } %>
+          </div>
+
+          <div class="form-group">
+            <label for="duration">Duration (minutes) *</label>
+            <input 
+              type="number" 
+              id="duration" 
+              name="duration" 
+              class="form-control" 
+              placeholder="e.g., 120"
+              min="1"
+              max="300"
+              required
+            >
+            <small class="text-muted">Typical: 90-180 minutes</small>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="rating">Rating (0-10) *</label>
+          <input 
+            type="number" 
+            id="rating" 
+            name="rating" 
+            class="form-control" 
+            placeholder="e.g., 8.5"
+            min="0"
+            max="10"
+            step="0.1"
+            required
+          >
+          <small class="text-muted">Industry standard rating out of 10</small>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea 
+            id="description" 
+            name="description" 
+            class="form-control" 
+            placeholder="Enter a brief description of the movie plot, themes, and key details..."
+            rows="5"
+          ></textarea>
+          <small class="text-muted">Optional: Provide a synopsis for staff reference</small>
+        </div>
+
+        <div class="form-group">
+          <div class="checkbox-group">
+            <input 
+              type="checkbox" 
+              id="isActive" 
+              name="isActive"
+              checked
+            >
+            <label for="isActive">Active (Available for screening)</label>
+          </div>
+          <small class="text-muted">Only active movies can be scheduled for screenings</small>
+        </div>
+
+        <div class="btn-group">
+          <button type="submit" class="btn btn-success">Create Movie</button>
+          <a href="/admin/movies" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+

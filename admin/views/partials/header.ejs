@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title + ' - ' : '' %>CineVillage Admin Portal</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231a1a2e%22/><text x=%2250%22 y=%2265%22 font-size=%2250%22 fill=%22%23e94560%22 text-anchor=%22middle%22 font-family=%22sans-serif%22>C</text></svg>">
+  <style>
+    .page-loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-color) 0%, var(--accent-light) 100%);
+      transform: scaleX(0);
+      transform-origin: left;
+      animation: loadPage 1s ease-out forwards;
+      z-index: 9999;
+    }
+    @keyframes loadPage {
+      0% { transform: scaleX(0); }
+      100% { transform: scaleX(1); }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <div class="page-loader"></div>
+  <nav class="navbar" role="navigation" aria-label="Main">
+    <div class="navbar-container">
+      <a href="/dashboard" class="navbar-brand">
+        <span>CineVillage <span style="font-weight: 400; opacity: 0.8;">Admin</span></span>
+      </a>
+      <button type="button" class="nav-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="nav-menu">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+      <div id="nav-menu" class="nav-menu">
+        <ul class="nav-links">
+          <li><a href="/dashboard">Dashboard</a></li>
+          <li><a href="/admin/movies">Movies</a></li>
+          <li><a href="/admin/halls">Halls</a></li>
+          <li><a href="/admin/screenings">Screenings</a></li>
+        </ul>
+        <div class="user-info">
+          <a href="/profile" class="user-name" title="View profile"><%= staff.staffName || 'User' %></a>
+          <a href="/auth/logout" class="btn-logout">Logout</a>
+        </div>
+      </div>
+    </div>
+  </nav>
