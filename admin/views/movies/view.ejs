@@ -75,7 +75,7 @@
         <div class="empty-state">
           <h3>No upcoming screenings</h3>
           <p>This movie has no scheduled screenings yet. Schedule one now!</p>
-          <a href="/admin/screenings/new" class="btn btn-primary">Schedule a Screening</a>
+          <a href="/admin/screenings/new" class="btn btn-success">Schedule a Screening</a>
         </div>
       <% } else { %>
         <div class="table-container">
@@ -95,7 +95,7 @@
                     <strong style="color: var(--primary-color);"><%= new Date(screening.startTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) %></strong><br>
                     <span style="color: var(--accent-color); font-weight: 600; font-size: 1.05rem;"><%= new Date(screening.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) %></span>
                   </td>
-                  <td><span class="badge badge-secondary"><%= screening.hall.name %></span></td>
+                  <td><span class="badge badge-secondary"><%= screening.hall ? screening.hall.name : 'Deleted' %></span></td>
                   <td><strong style="color: var(--light-text);"><%= new Date(screening.endTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) %></strong></td>
                   <td>
                     <div class="table-actions">

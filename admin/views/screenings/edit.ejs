@@ -35,7 +35,7 @@
           <select id="hallId" name="hallId" class="form-control" required>
             <option value="">-- Choose a hall --</option>
             <% halls.forEach(hall => { %>
-              <option value="<%= hall._id %>" <%= hall._id.toString() === screening.hall._id.toString() ? 'selected' : '' %>>
+              <option value="<%= hall._id %>" <%= screening.hall && hall._id.toString() === screening.hall._id.toString() ? 'selected' : '' %>>
                 <%= hall.name %> (<%= hall.rows * hall.columns %> seats)
                 <% if (hall.isUnderMaintenance) { %> - MAINTENANCE<% } %>
               </option>
@@ -93,7 +93,7 @@
           <strong>Movie:</strong> <%= screening.movie.title %>
         </div>
         <div>
-          <strong>Hall:</strong> <%= screening.hall.name %>
+          <strong>Hall:</strong> <%= screening.hall ? screening.hall.name : 'Deleted' %>
         </div>
         <div>
           <strong>Start:</strong> <%= new Date(screening.startTime).toLocaleString() %>

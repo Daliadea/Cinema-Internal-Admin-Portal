@@ -60,23 +60,27 @@ router.post('/register', async (req, res) => {
   try {
     const { username, password, name, email, role } = req.body;
 
+    // Server-side validation
+    if (!password || password.length < 6) {
+      return res.render('auth/register', { error: 'Password must be at least 6 characters long.', success: null });
+    }
+
     // Check if username already exists
-    const existingStaff = await Staff.findOne({ username });
-    //return error if exist
+    const existingStaff = await Staff.findOne({ $or: [{ username }, { email }] });
     if (existingStaff) {
       return res.render('auth/register', { 
-        error: 'Username or email already exists', 
+        error: existingStaff.username === username ? 'Username already exists.' : 'Email is already registered.',
         success: null 
       });
     }
 
-    // Create new staff if error not found 
+    // Create new staff — role is always 'staff' for self-registration
     const newStaff = new Staff({
       username,
       password, 
       name,
       email,
-      role: role || 'staff' // default to staff
+      role: 'staff'
     });
 
     await newStaff.save();

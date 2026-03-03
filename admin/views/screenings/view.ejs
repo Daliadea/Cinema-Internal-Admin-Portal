@@ -45,12 +45,16 @@
         </div>
         <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--success-color);">
           <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Hall</h3>
-          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);">
-            <a href="/admin/halls/<%= screening.hall._id %>" style="color: var(--primary-color); text-decoration: none;">
-              <%= screening.hall.name %>
-            </a>
-          </p>
-          <p class="text-muted" style="margin-top: 0.5rem;"><%= screening.hall.rows * screening.hall.columns %> seats</p>
+          <% if (screening.hall) { %>
+            <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);">
+              <a href="/admin/halls/<%= screening.hall._id %>" style="color: var(--primary-color); text-decoration: none;">
+                <%= screening.hall.name %>
+              </a>
+            </p>
+            <p class="text-muted" style="margin-top: 0.5rem;"><%= screening.hall.rows * screening.hall.columns %> seats</p>
+          <% } else { %>
+            <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);"><span class="text-muted">Deleted</span></p>
+          <% } %>
         </div>
         <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--warning-color);">
           <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Date</h3>

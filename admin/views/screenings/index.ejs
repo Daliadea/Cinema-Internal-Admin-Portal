@@ -2,12 +2,15 @@
 
 <div class="container" id="main-content">
   <%- include('../partials/success', { success: typeof success !== 'undefined' ? success : null }) %>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert alert-danger"><%= error %></div>
+  <% } %>
   <div class="page-header">
     <div>
       <h1>Screenings Management</h1>
       <p style="color: var(--light-text); font-size: 1rem; margin-top: 0.5rem;">Schedule and manage movie screenings</p>
     </div>
-    <a href="/admin/screenings/new" class="btn btn-primary">Schedule New Screening</a>
+    <a href="/admin/screenings/new" class="btn btn-success">Schedule New Screening</a>
   </div>
 
   <!-- Screening Stats Summary -->
@@ -105,7 +108,7 @@
         <div class="empty-state">
           <h3>No screenings scheduled</h3>
           <p>Start scheduling movie screenings for your cinema halls!</p>
-          <a href="/admin/screenings/new" class="btn btn-primary">Schedule Your First Screening</a>
+          <a href="/admin/screenings/new" class="btn btn-success">Schedule Your First Screening</a>
         </div>
       <% } else { %>
         <div class="table-container">
@@ -135,7 +138,7 @@
                       <span class="badge badge-success" style="margin-left: 0.5rem;">LIVE</span>
                     <% } %>
                   </td>
-                  <td><span class="badge badge-secondary"><%= screening.hall.name %></span></td>
+                  <td><span class="badge badge-secondary"><%= screening.hall ? screening.hall.name : 'Deleted' %></span></td>
                   <td style="color: var(--dark-text);"><%= screeningStart.toLocaleDateString('en-CA') %></td>
                   <td><strong style="color: var(--accent-color);"><%= screeningStart.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) %></strong></td>
                   <td><strong style="color: var(--light-text);"><%= screeningEnd.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) %></strong></td>
@@ -159,6 +162,16 @@
       <% } %>
     </div>
   </div>
+
+  <% if (pastCount > 0) { %>
+    <div style="margin-top: 1.5rem; text-align: right;">
+      <form action="/admin/screenings/delete-past" method="POST" style="display: inline;" onsubmit="return confirm('Delete all <%= pastCount %> past screening(s)? This cannot be undone.');">
+        <button type="submit" class="btn btn-danger" style="box-shadow: var(--shadow-hover); padding: 0.75rem 1.25rem; font-weight: 600;">
+          Delete Past Screenings (<%= pastCount %>)
+        </button>
+      </form>
+    </div>
+  <% } %>
 </div>
 
 <%- include('../partials/footer') %>

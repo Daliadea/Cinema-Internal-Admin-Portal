@@ -2,6 +2,12 @@
 
 <div class="container" id="main-content">
   <%- include('../partials/success', { success: typeof success !== 'undefined' ? success : null }) %>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert alert-danger" role="alert" style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+      <span><%= error %></span>
+      <a href="/admin/screenings" class="btn btn-sm btn-primary" style="margin-left: auto;">View Screenings</a>
+    </div>
+  <% } %>
   <div class="page-header">
     <div>
       <h1><%= hall.name %></h1>
@@ -83,7 +89,7 @@
           <h3>No upcoming screenings</h3>
           <p>This hall has no scheduled screenings yet.</p>
           <% if (!hall.isUnderMaintenance) { %>
-            <a href="/admin/screenings/new" class="btn btn-primary">Schedule a Screening</a>
+            <a href="/admin/screenings/new" class="btn btn-success">Schedule a Screening</a>
           <% } else { %>
             <p class="text-warning">Hall is under maintenance and cannot be scheduled.</p>
           <% } %>

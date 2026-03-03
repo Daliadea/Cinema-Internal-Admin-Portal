@@ -43,6 +43,18 @@ router.get('/new', (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { name, rows, columns, wheelchairSeats, isUnderMaintenance } = req.body;
+    const trimmedName = (name || '').trim();
+
+    // Check for duplicate hall name (case-insensitive)
+    const existing = await Hall.findOne({
+      name: { $regex: new RegExp('^' + trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') }
+    });
+    if (existing) {
+      return res.render('halls/new', {
+        error: 'A hall with this name already exists.',
+        staff: req.session
+      });
+    }
 
     // Parse wheelchair seats to array
     const wheelchairSeatsArray = wheelchairSeats 
@@ -50,7 +62,7 @@ router.post('/', async (req, res) => {
       : [];
 
     const newHall = new Hall({
-      name,
+      name: trimmedName,
       rows: parseInt(rows), //form inputs are always in string so need parseint to database
       columns: parseInt(columns),
       wheelchairSeats: wheelchairSeatsArray,
@@ -78,6 +90,7 @@ router.get('/:id', async (req, res) => {
     }
 
     const success = req.query.updated ? 'Hall updated successfully.' : null;
+    const error = req.query.error ? decodeURIComponent(req.query.error) : null;
 
     // Get upcoming screenings for this hall
     const upcomingScreenings = await Screening.find({ 
@@ -88,7 +101,7 @@ router.get('/:id', async (req, res) => {
     .sort({ startTime: 1 })
     .limit(10);
 
-    res.render('halls/view', { hall, upcomingScreenings, success, staff: req.session });
+    res.render('halls/view', { hall, upcomingScreenings, success, error, staff: req.session });
   } catch (error) {
     console.error('Error fetching hall:', error);
     res.status(500).send('Error fetching hall');
@@ -121,6 +134,31 @@ router.post('/:id', async (req, res) => {
       return res.status(404).send('Hall not found');
     }
 
+    const trimmedName = (name || '').trim();
+
+    // Check for duplicate hall name (case-insensitive), excluding current hall
+    const existing = await Hall.findOne({
+      _id: { $ne: hall._id },
+      name: { $regex: new RegExp('^' + trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') }
+    });
+    if (existing) {
+      const hallWithUpdates = {
+        ...hall.toObject(),
+        name: trimmedName,
+        rows: parseInt(rows) || hall.rows,
+        columns: parseInt(columns) || hall.columns,
+        wheelchairSeats: wheelchairSeats
+          ? wheelchairSeats.split(',').map(seat => seat.trim()).filter(seat => seat)
+          : hall.wheelchairSeats,
+        isUnderMaintenance: isUnderMaintenance === 'on' || isUnderMaintenance === true
+      };
+      return res.render('halls/edit', {
+        hall: hallWithUpdates,
+        error: 'A hall with this name already exists.',
+        staff: req.session
+      });
+    }
+
     // Check if hall is being set to maintenance and has future screenings
     if (isUnderMaintenance === 'on' && !hall.isUnderMaintenance) {
       const futureScreenings = await Screening.countDocuments({
@@ -143,7 +181,7 @@ router.post('/:id', async (req, res) => {
       : [];
 
     // Update hall
-    hall.name = name;
+    hall.name = trimmedName;
     hall.rows = parseInt(rows);
     hall.columns = parseInt(columns);
     hall.wheelchairSeats = wheelchairSeatsArray;
@@ -171,13 +209,15 @@ router.post('/:id/delete', async (req, res) => {
       return res.status(404).send('Hall not found');
     }
 
-    // Check if hall has any screenings (past or future)
-    const screeningsCount = await Screening.countDocuments({ hall: hall._id });
+    // Block delete only if there are future screenings (past screenings are ignored)
+    const futureScreeningsCount = await Screening.countDocuments({
+      hall: hall._id,
+      startTime: { $gte: new Date() }
+    });
 
-    if (screeningsCount > 0) {
-      return res.status(400).json({ 
-        error: `Cannot delete hall. There are ${screeningsCount} screening(s) associated with this hall.` 
-      });
+    if (futureScreeningsCount > 0) {
+      const errorMsg = `Cannot delete hall. There are ${futureScreeningsCount} upcoming screening(s) for this hall. Please cancel or reschedule them first.`;
+      return res.redirect(`/admin/halls/${hall._id}?error=${encodeURIComponent(errorMsg)}`);
     }
 
     await Hall.findByIdAndDelete(req.params.id);

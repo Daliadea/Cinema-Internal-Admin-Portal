@@ -79,10 +79,15 @@ router.get('/', async (req, res) => {
     const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
     const halls = dedupeHalls(await Hall.find().sort({ name: 1 }));
 
-    const success = req.query.created ? 'Screening scheduled successfully.' : req.query.updated ? 'Screening updated successfully.' : req.query.deleted ? 'Screening deleted successfully.' : null;
+    let success = null;
+    if (req.query.created) success = 'Screening scheduled successfully.';
+    else if (req.query.updated) success = 'Screening updated successfully.';
+    else if (req.query.deleted !== undefined) success = req.query.deleted === '0' ? 'No past screenings to delete.' : req.query.deleted + ' past screening(s) deleted successfully.';
+    const error = req.query.error ? decodeURIComponent(req.query.error) : null;
     res.render('screenings/index', { 
       screenings, 
       success, 
+      error,
       movies, 
       halls,
       filters: { dateFrom, dateTo, movieId, hallId, status },
@@ -91,6 +96,18 @@ router.get('/', async (req, res) => {
   } catch (error) {
     console.error('Error fetching screenings:', error);
     res.status(500).send('Error fetching screenings');
+  }
+});
+
+// POST - Delete all past screenings
+router.post('/delete-past', async (req, res) => {
+  try {
+    const now = new Date();
+    const result = await Screening.deleteMany({ endTime: { $lt: now } });
+    res.redirect('/admin/screenings?deleted=' + result.deletedCount);
+  } catch (error) {
+    console.error('Error deleting past screenings:', error);
+    res.redirect('/admin/screenings?error=' + encodeURIComponent('Failed to delete past screenings.'));
   }
 });
 
@@ -410,14 +427,14 @@ router.post('/:id/delete', async (req, res) => {
     const screening = await Screening.findById(req.params.id);
 
     if (!screening) {
-      return res.status(404).json({ error: 'Screening not found' });
+      return res.redirect('/admin/screenings');
     }
 
     await Screening.findByIdAndDelete(req.params.id);
-    res.redirect('/dashboard?deleted=1');
+    res.redirect('/admin/screenings?deleted=1');
   } catch (error) {
     console.error('Error deleting screening:', error);
-    res.status(500).json({ error: 'Failed to delete screening' });
+    res.redirect('/admin/screenings');
   }
 });
 
