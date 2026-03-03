@@ -71,6 +71,11 @@ app.use('/admin/halls', isAuthenticated, hallsRouter);
 app.use('/admin/screenings', isAuthenticated, screeningsRouter);
 app.use('/admin/genres', isAuthenticated, genresRouter);
 
+// Demo route to show custom 500 page (for profile "View 500 Page" button)
+app.get('/demo/500', (req, res) => {
+  res.status(500).render('500', { errorMessage: 'Demo: Simulated server error for testing.' });
+});
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).render('404');

@@ -1045,9 +1045,24 @@ html.dark-mode {
   --dark-text: #f1f5f9;
   --light-text: #94a3b8;
   --border-color: #334155;
+  --primary-color: #e2e8f0;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+html.dark-mode body {
+  background: var(--light-bg);
+  color: var(--dark-text);
+}
+
+html.dark-mode .navbar {
+  background: #1e293b;
+}
+
+html.dark-mode .card {
+  background: var(--card-bg);
+  border-color: var(--border-color);
 }
 
 html.dark-mode .card-header {
@@ -1055,9 +1070,66 @@ html.dark-mode .card-header {
   border-bottom-color: var(--border-color);
 }
 
+html.dark-mode .card-header h2 {
+  color: var(--dark-text);
+}
+
+html.dark-mode .card-body {
+  color: var(--dark-text);
+}
+
 html.dark-mode .stat-card {
   background: var(--card-bg);
   border-color: var(--border-color);
+}
+
+html.dark-mode tbody tr {
+  background: var(--card-bg);
+}
+
+html.dark-mode tbody td {
+  color: var(--dark-text);
+}
+
+html.dark-mode tbody td strong {
+  color: var(--dark-text);
+}
+
+html.dark-mode .table-container {
+  border-color: var(--border-color);
+}
+
+html.dark-mode .screening-item {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+html.dark-mode .screening-movie {
+  color: var(--dark-text);
+}
+
+html.dark-mode .empty-state {
+  color: var(--light-text);
+}
+
+html.dark-mode .empty-state h3 {
+  color: var(--dark-text);
+}
+
+html.dark-mode .page-header h1 {
+  color: var(--dark-text);
+}
+
+html.dark-mode .page-header p {
+  color: var(--light-text);
+}
+
+html.dark-mode .form-group label {
+  color: var(--dark-text);
+}
+
+html.dark-mode thead {
+  background: #1e293b;
 }
 
 html.dark-mode .alert-success {
@@ -1118,6 +1190,31 @@ html.dark-mode ::-webkit-scrollbar-thumb {
 
 html.dark-mode ::-webkit-scrollbar-thumb:hover {
   background: var(--light-text);
+}
+
+/* Profile page dark mode */
+html.dark-mode .profile-hero {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+}
+
+html.dark-mode .profile-card-header {
+  background: #334155;
+  border-bottom-color: var(--border-color);
+}
+
+html.dark-mode .profile-card-header h2 {
+  color: var(--dark-text);
+}
+
+html.dark-mode .profile-readonly {
+  background: #0f172a;
+  border-color: var(--border-color);
+  color: var(--light-text);
+}
+
+html.dark-mode .profile-form-group input.form-control:disabled {
+  background: #0f172a;
+  color: var(--light-text);
 }
 
 /* ==================== PRINT STYLES ==================== */
