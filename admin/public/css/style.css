@@ -1,4 +1,17 @@
-/* ==================== RESET & BASE STYLES ==================== */
+/*
+ * STYLE.CSS - Main stylesheet for CineVillage Admin
+ *
+ * Structure (easy to explain in interview):
+ * 1. Reset + :root variables (one place for colors, spacing, shadows)
+ * 2. Base (body, container, page-header)
+ * 3. Components (navbar, cards, buttons, forms, tables, alerts, etc.)
+ * 4. Utilities (text-center, margins, badges)
+ * 5. Dark mode: when html has class "dark-mode", we override variables and
+ *    a few components that use hardcoded colors (e.g. card-header, thead)
+ * 6. Print: hide nav/buttons for printing
+ */
+
+/* ==================== RESET & BASE ==================== */
 * {
   margin: 0;
   padding: 0;
@@ -35,7 +48,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Skip to main content - visible on focus for keyboard/screen reader users */
+
 .skip-link {
   position: absolute;
   top: -3rem;
@@ -87,47 +100,6 @@ body {
 
 .navbar-brand:hover {
   color: rgba(255, 255, 255, 0.9);
-}
-
-/* Hamburger toggle - hidden on desktop */
-.nav-toggle {
-  display: none;
-  flex-direction: column;
-  justify-content: center;
-  gap: 5px;
-  width: 2.25rem;
-  height: 2.25rem;
-  padding: 0;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: var(--white);
-  border-radius: 4px;
-  transition: background 0.2s;
-}
-.nav-toggle:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-.nav-toggle:focus-visible {
-  outline: 2px solid var(--white);
-  outline-offset: 2px;
-}
-.nav-toggle-bar {
-  display: block;
-  width: 100%;
-  height: 2px;
-  background: currentColor;
-  border-radius: 1px;
-  transition: transform 0.3s ease, opacity 0.3s ease;
-}
-.navbar.open .nav-toggle-bar:nth-child(1) {
-  transform: translateY(7px) rotate(45deg);
-}
-.navbar.open .nav-toggle-bar:nth-child(2) {
-  opacity: 0;
-}
-.navbar.open .nav-toggle-bar:nth-child(3) {
-  transform: translateY(-7px) rotate(-45deg);
 }
 
 .nav-menu {
@@ -198,7 +170,7 @@ body {
   background: #991b1b;
 }
 
-/* ==================== CONTAINER ==================== */
+
 .container {
   max-width: 1200px;
   margin: 1.5rem auto;
@@ -220,7 +192,7 @@ body {
   font-weight: 600;
 }
 
-/* ==================== CARDS ==================== */
+
 .card {
   background: var(--card-bg);
   border-radius: 6px;
@@ -249,7 +221,7 @@ body {
   color: var(--dark-text);
 }
 
-/* ==================== STATS GRID ==================== */
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -302,7 +274,6 @@ body {
   margin: 0;
 }
 
-/* ==================== BUTTONS ==================== */
 .btn {
   padding: 0.5rem 1rem;
   border: none;
@@ -372,7 +343,7 @@ a:focus-visible,
   flex-wrap: wrap;
 }
 
-/* ==================== FORMS ==================== */
+
 .form-group {
   margin-bottom: 1.75rem;
 }
@@ -454,7 +425,7 @@ small.text-muted {
   line-height: 1.4;
 }
 
-/* Date input wrapper - entire box opens picker on click */
+
 .date-input-wrapper {
   cursor: pointer;
   width: 100%;
@@ -465,12 +436,11 @@ small.text-muted {
   cursor: pointer;
 }
 
-/* ==================== TABLES ==================== */
+
 .table-container {
   overflow-x: auto;
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  /* Hide horizontal scrollbar while keeping scroll on small screens */
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -541,7 +511,7 @@ tbody td strong {
   min-height: 31px;
 }
 
-/* ==================== BADGES ==================== */
+
 .badge {
   display: inline-block;
   padding: 0.25rem 0.5rem;
@@ -575,7 +545,7 @@ tbody td strong {
   color: var(--white);
 }
 
-/* ==================== ALERTS ==================== */
+
 .alert {
   padding: 0.75rem 1rem;
   border-radius: 4px;
@@ -610,7 +580,6 @@ tbody td strong {
   color: #0c5460;
 }
 
-/* ==================== AUTH PAGES ==================== */
 .auth-container {
   min-height: 100vh;
   display: flex;
@@ -665,7 +634,7 @@ tbody td strong {
   text-decoration: underline;
 }
 
-/* ==================== SCREENING LIST ==================== */
+
 .screening-item {
   background: var(--white);
   border-radius: 4px;
@@ -712,7 +681,7 @@ tbody td strong {
   font-weight: 600;
 }
 
-/* ==================== EMPTY STATE ==================== */
+
 .empty-state {
   text-align: center;
   padding: 2rem 1.5rem;
@@ -731,74 +700,7 @@ tbody td strong {
   font-size: 0.875rem;
 }
 
-/* ==================== RESPONSIVE ==================== */
-@media (max-width: 768px) {
-  .navbar-container {
-    flex-wrap: wrap;
-    gap: 0;
-  }
 
-  .nav-toggle {
-    display: flex;
-    margin-left: auto;
-  }
-
-  .nav-menu {
-    display: none;
-    flex-direction: column;
-    width: 100%;
-    padding-top: 1rem;
-    gap: 1rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
-  }
-
-  .navbar.open .nav-menu {
-    display: flex;
-  }
-
-  .nav-links {
-    flex-direction: column;
-    gap: 0.5rem;
-    width: 100%;
-  }
-
-  .nav-links a {
-    width: 100%;
-    text-align: center;
-    padding: 0.75rem;
-  }
-
-  .user-info {
-    width: 100%;
-    justify-content: center;
-    padding-top: 0.5rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
-  }
-
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .table-container {
-    font-size: 0.875rem;
-  }
-
-  .btn-group {
-    flex-direction: column;
-  }
-
-  .screening-header {
-    flex-direction: column;
-  }
-}
-
-/* ==================== LOADING SPINNER ==================== */
 .spinner {
   border: 4px solid var(--light-bg);
   border-top: 4px solid var(--accent-color);
@@ -814,7 +716,7 @@ tbody td strong {
   100% { transform: rotate(360deg); }
 }
 
-/* ==================== UTILITIES ==================== */
+
 .text-center {
   text-align: center;
 }
@@ -866,25 +768,25 @@ tbody td strong {
 .gap-2 { gap: 1rem; }
 .gap-3 { gap: 1.5rem; }
 
-/* ==================== MODERN ENHANCEMENTS ==================== */
 
-/* Smooth scroll */
+
+
 html {
   scroll-behavior: smooth;
 }
 
-/* Focus visible for accessibility */
+
 *:focus-visible {
   outline: 3px solid var(--accent-color);
   outline-offset: 2px;
 }
 
-/* Link animations */
+
 a {
   transition: var(--transition);
 }
 
-/* Custom scrollbar */
+
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -903,142 +805,23 @@ a {
   background: var(--accent-color);
 }
 
-/* Selection color */
+
 ::selection {
   background: var(--accent-color);
   color: var(--white);
 }
 
-/* Loading shimmer (simple) */
+
 .loading-shimmer {
   background: #e2e8f0;
 }
 
-/* Accent text */
+
 .gradient-text {
   color: var(--accent-color);
 }
 
-/* ==================== RESPONSIVE DESIGN ==================== */
-@media (max-width: 1024px) {
-  .navbar-container {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  }
-  
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-}
 
-@media (max-width: 768px) {
-  .container {
-    padding: 0 1rem;
-    margin: 1rem auto;
-  }
-  
-  .navbar-container {
-    padding: 1rem;
-  }
-  
-  .nav-links {
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    justify-content: center;
-  }
-  
-  .nav-links a {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.85rem;
-  }
-  
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-  }
-  
-  .stat-card .stat-value {
-    font-size: 2.5rem;
-  }
-  
-  .page-header h1 {
-    font-size: 1.75rem;
-  }
-  
-  .card-body {
-    padding: 1.5rem;
-  }
-  
-  .table-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  table {
-    font-size: 0.85rem;
-  }
-  
-  thead th {
-    padding: 1rem;
-    font-size: 0.75rem;
-  }
-  
-  tbody td {
-    padding: 1rem;
-  }
-  
-  .btn-group {
-    width: 100%;
-    flex-direction: column;
-  }
-  
-  .btn {
-    width: 100%;
-  }
-  
-  .auth-card {
-    padding: 2rem;
-  }
-  
-  .auth-header h1 {
-    font-size: 2rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .navbar-brand {
-    font-size: 1.25rem;
-  }
-  
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .page-header h1 {
-    font-size: 1.5rem;
-  }
-  
-  .screening-details {
-    grid-template-columns: 1fr;
-  }
-  
-  .table-actions {
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-  
-  .table-actions .btn {
-    width: 100%;
-  }
-}
-
-/* ==================== DARK MODE ==================== */
 html.dark-mode {
   --light-bg: #0f172a;
   --card-bg: #1e293b;
@@ -1217,7 +1000,7 @@ html.dark-mode .profile-form-group input.form-control:disabled {
   color: var(--light-text);
 }
 
-/* ==================== PRINT STYLES ==================== */
+
 @media print {
   .navbar,
   .btn,
@@ -1240,4 +1023,23 @@ html.dark-mode .profile-form-group input.form-control:disabled {
   .page-header {
     border-bottom: 2px solid #000;
   }
+}
+
+/* Animations used by main.js for form validation shake and toast notifications */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25%       { transform: translateX(-10px); }
+  75%       { transform: translateX(10px); }
+}
+
+.shake { animation: shake 0.3s ease-in-out; }
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+@keyframes slideOutRight {
+  from { transform: translateX(0);    opacity: 1; }
+  to   { transform: translateX(100%); opacity: 0; }
 }

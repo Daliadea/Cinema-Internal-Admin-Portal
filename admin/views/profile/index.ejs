@@ -8,9 +8,6 @@
     gap: 1.5rem;
     align-items: start;
   }
-  @media (max-width: 768px) {
-    .profile-cards-grid { grid-template-columns: 1fr; }
-  }
   .profile-hero {
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
     border-radius: 12px;
@@ -56,7 +53,6 @@
   .profile-card-body { padding: 1.5rem; }
   .profile-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
   .profile-form-grid.single-col { grid-template-columns: 1fr; }
-  @media (max-width: 600px) { .profile-form-grid { grid-template-columns: 1fr; } }
   .profile-form-group { margin-bottom: 1.25rem; }
   .profile-form-group:last-child { margin-bottom: 0; }
   .profile-form-group.full-width { grid-column: 1 / -1; }

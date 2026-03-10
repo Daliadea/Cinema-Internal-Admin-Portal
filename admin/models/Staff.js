@@ -7,7 +7,9 @@ const staffSchema = new Schema({
   password: { type: String, required: true },
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  role: { type: String, default: 'staff', enum: ['staff', 'manager', 'admin'] }
+  role: { type: String, default: 'staff', enum: ['staff', 'manager', 'admin'] },
+  resetPasswordToken: { type: String, default: null },
+  resetPasswordExpires: { type: Date, default: null }
 }, { timestamps: true });
 
 // Hash password before saving only if its not modified before to prevent double hash

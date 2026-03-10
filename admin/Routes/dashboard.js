@@ -75,22 +75,21 @@ router.get('/', async (req, res) => {
       startTime: { $gte: new Date() }
     });
 
-    // Get movies and halls for filter dropdowns (deduplicate halls by name)
+    // Get movies and halls for filter dropdowns (remove any duplicate hall names)
     const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
     const allHalls = await Hall.find().sort({ name: 1 });
-    const seenNames = new Set();
+    const seen = new Set();
     const halls = allHalls.filter(h => {
-      const key = h.name.toLowerCase();
-      if (seenNames.has(key)) return false;
-      seenNames.add(key);
+      if (seen.has(h.name.toLowerCase())) return false;
+      seen.add(h.name.toLowerCase());
       return true;
     });
 
-    // Success message from redirects
-    const success = req.query.created ? 'Screening scheduled successfully.' 
-      : req.query.updated ? 'Screening updated successfully.' 
-      : req.query.deleted ? 'Screening deleted successfully.' 
-      : null;
+    // Success message passed via query string from redirects
+    let success = null;
+    if (req.query.created) success = 'Screening scheduled successfully.';
+    else if (req.query.updated) success = 'Screening updated successfully.';
+    else if (req.query.deleted) success = 'Screening deleted successfully.';
 
     res.render('dashboard/index', {
       totalActiveMovies,

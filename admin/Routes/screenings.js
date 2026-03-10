@@ -5,6 +5,7 @@ const Screening = require('../models/Screening');
 const Movie = require('../models/Movie');
 const Hall = require('../models/Hall');
 
+// Remove duplicate hall names (same name, different documents)
 function dedupeHalls(halls) {
   const seen = new Set();
   return halls.filter(h => {
@@ -15,13 +16,41 @@ function dedupeHalls(halls) {
   });
 }
 
-//list all screenings get (with filtering)
+// Fetch the movies and halls needed to render the screening form
+async function getFormData(excludeMaintenance = false) {
+  const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
+  const hallFilter = excludeMaintenance ? { isUnderMaintenance: false } : {};
+  const halls = dedupeHalls(await Hall.find(hallFilter).sort({ name: 1 }));
+  return { movies, halls };
+}
+
+// Calculate end time: movie duration + 15-minute cleaning buffer
+function calcEndTime(start, movieDurationMinutes) {
+  return new Date(start.getTime() + (movieDurationMinutes + 15) * 60000);
+}
+
+// Check if a hall already has a screening during the given time window.
+// Pass excludeId when editing so the current screening doesn't conflict with itself.
+async function checkOverlap(hallId, startTime, endTime, excludeId = null) {
+  const query = {
+    hall: hallId,
+    $or: [
+      { startTime: { $lte: startTime }, endTime: { $gt: startTime } },  // existing starts before and ends after new start
+      { startTime: { $lt: endTime },   endTime: { $gte: endTime } },     // existing starts before and ends after new end
+      { startTime: { $gte: startTime }, endTime: { $lte: endTime } }     // existing is completely inside new window
+    ]
+  };
+  if (excludeId) query._id = { $ne: excludeId };
+  return Screening.find(query).populate('movie').populate('hall');
+}
+
+// GET - List all screenings (with optional filters)
 router.get('/', async (req, res) => {
   try {
     const { dateFrom, dateTo, movieId, hallId, status } = req.query;
     const now = new Date();
 
-    // Build date range conditions
+    // Build date range object from query params
     const dateRange = {};
     if (dateFrom) {
       const from = new Date(dateFrom);
@@ -35,30 +64,20 @@ router.get('/', async (req, res) => {
     }
     const hasDateRange = Object.keys(dateRange).length > 0;
 
-    // Build query - use ObjectId for refs when valid
+    // Build the MongoDB query
     const query = {};
-    if (movieId && mongoose.Types.ObjectId.isValid(movieId)) {
-      query.movie = new mongoose.Types.ObjectId(movieId);
-    }
-    if (hallId && mongoose.Types.ObjectId.isValid(hallId)) {
-      query.hall = new mongoose.Types.ObjectId(hallId);
-    }
+    if (movieId && mongoose.Types.ObjectId.isValid(movieId)) query.movie = new mongoose.Types.ObjectId(movieId);
+    if (hallId  && mongoose.Types.ObjectId.isValid(hallId))  query.hall  = new mongoose.Types.ObjectId(hallId);
 
-    // Status + date range filter
     if (status === 'upcoming') {
       query.startTime = hasDateRange ? { $gt: now, ...dateRange } : { $gt: now };
     } else if (status === 'ongoing') {
       const startCond = { $lte: now };
       if (hasDateRange) {
         if (dateRange.$gte) startCond.$gte = dateRange.$gte;
-        if (dateRange.$lte) {
-          startCond.$lte = dateRange.$lte < now ? dateRange.$lte : now;
-        }
+        if (dateRange.$lte) startCond.$lte = dateRange.$lte < now ? dateRange.$lte : now;
       }
-      query.$and = [
-        { startTime: startCond },
-        { endTime: { $gte: now } }
-      ];
+      query.$and = [{ startTime: startCond }, { endTime: { $gte: now } }];
     } else if (status === 'past') {
       const endCond = { $lt: now };
       if (hasDateRange) {
@@ -70,28 +89,23 @@ router.get('/', async (req, res) => {
       query.startTime = dateRange;
     }
 
-    const screenings = await Screening.find(query)
-      .populate('movie')
-      .populate('hall')
-      .sort({ startTime: -1 });
-
-    // Get movies and halls for filter dropdowns (deduplicate halls by name)
-    const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-    const halls = dedupeHalls(await Hall.find().sort({ name: 1 }));
+    const screenings = await Screening.find(query).populate('movie').populate('hall').sort({ startTime: -1 });
+    const { movies, halls } = await getFormData();
 
     let success = null;
     if (req.query.created) success = 'Screening scheduled successfully.';
     else if (req.query.updated) success = 'Screening updated successfully.';
-    else if (req.query.deleted !== undefined) success = req.query.deleted === '0' ? 'No past screenings to delete.' : req.query.deleted + ' past screening(s) deleted successfully.';
+    else if (req.query.deleted !== undefined) {
+      success = req.query.deleted === '0'
+        ? 'No past screenings to delete.'
+        : `${req.query.deleted} past screening(s) deleted successfully.`;
+    }
     const error = req.query.error ? decodeURIComponent(req.query.error) : null;
-    res.render('screenings/index', { 
-      screenings, 
-      success, 
-      error,
-      movies, 
-      halls,
+
+    res.render('screenings/index', {
+      screenings, success, error, movies, halls,
       filters: { dateFrom, dateTo, movieId, hallId, status },
-      staff: req.session 
+      staff: req.session
     });
   } catch (error) {
     console.error('Error fetching screenings:', error);
@@ -102,8 +116,7 @@ router.get('/', async (req, res) => {
 // POST - Delete all past screenings
 router.post('/delete-past', async (req, res) => {
   try {
-    const now = new Date();
-    const result = await Screening.deleteMany({ endTime: { $lt: now } });
+    const result = await Screening.deleteMany({ endTime: { $lt: new Date() } });
     res.redirect('/admin/screenings?deleted=' + result.deletedCount);
   } catch (error) {
     console.error('Error deleting past screenings:', error);
@@ -111,170 +124,58 @@ router.post('/delete-past', async (req, res) => {
   }
 });
 
-//Create new screening form get
+// GET - New screening form
 router.get('/new', async (req, res) => {
   try {
-    const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-    const halls = dedupeHalls(await Hall.find({ isUnderMaintenance: false }).sort({ name: 1 }));
-    
-    res.render('screenings/new', { 
-      movies, 
-      halls, 
-      error: null, 
-      staff: req.session 
-    });
+    const { movies, halls } = await getFormData(true);
+    res.render('screenings/new', { movies, halls, error: null, staff: req.session });
   } catch (error) {
     console.error('Error loading screening form:', error);
     res.status(500).send('Error loading screening form');
   }
 });
 
-// async function to help check if have screening overlap
-async function checkOverlap(hallId, startTime, endTime, excludeScreeningId = null) {
-  const query = {
-    hall: hallId,
-    $or: [
-      // New screening starts during an existing screening
-      { 
-        startTime: { $lte: startTime },
-        endTime: { $gt: startTime }
-      },
-      // New screening ends during an existing screening
-      { 
-        startTime: { $lt: endTime },
-        endTime: { $gte: endTime }
-      },
-      // New screening completely encompasses an existing screening
-      { 
-        startTime: { $gte: startTime },
-        endTime: { $lte: endTime }
-      }
-    ]
+// POST - Create new screening
+router.post('/', async (req, res) => {
+  const renderNew = async (error) => {
+    const { movies, halls } = await getFormData(true);
+    res.render('screenings/new', { movies, halls, error, staff: req.session });
   };
 
-  // If updating, exclude the current screening from overlap check
-  if (excludeScreeningId) {
-    query._id = { $ne: excludeScreeningId };
-  }
-
-  const overlappingScreenings = await Screening.find(query)
-    .populate('movie')
-    .populate('hall');
-
-  return overlappingScreenings;
-}
-
-// Create new screening post form
-router.post('/', async (req, res) => {
   try {
     const { movieId, hallId, startTime } = req.body;
 
-    // Validate inputs
-    if (!movieId || !hallId || !startTime) {
-      const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-      const halls = dedupeHalls(await Hall.find({ isUnderMaintenance: false }).sort({ name: 1 }));
-      return res.render('screenings/new', { 
-        movies, 
-        halls, 
-        error: 'All fields are required',
-        staff: req.session 
-      });
-    }
+    if (!movieId || !hallId || !startTime) return renderNew('All fields are required.');
 
-    // Get movie to calculate end time
     const movie = await Movie.findById(movieId);
-    if (!movie) {
-      const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-      const halls = dedupeHalls(await Hall.find({ isUnderMaintenance: false }).sort({ name: 1 }));
-      return res.render('screenings/new', { 
-        movies, 
-        halls, 
-        error: 'Selected movie not found',
-        staff: req.session 
-      });
-    }
+    if (!movie) return renderNew('Selected movie not found.');
 
-    // Get hall and check if it's under maintenance
     const hall = await Hall.findById(hallId);
-    if (!hall) {
-      const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-      const halls = dedupeHalls(await Hall.find({ isUnderMaintenance: false }).sort({ name: 1 }));
-      return res.render('screenings/new', { 
-        movies, 
-        halls, 
-        error: 'Selected hall not found',
-        staff: req.session 
-      });
-    }
+    if (!hall) return renderNew('Selected hall not found.');
+    if (hall.isUnderMaintenance) return renderNew(`Hall "${hall.name}" is currently under maintenance.`);
 
-    if (hall.isUnderMaintenance) {
-      const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-      const halls = dedupeHalls(await Hall.find({ isUnderMaintenance: false }).sort({ name: 1 }));
-      return res.render('screenings/new', { 
-        movies, 
-        halls, 
-        error: `Hall "${hall.name}" is currently under maintenance and cannot be scheduled`,
-        staff: req.session 
-      });
-    }
-
-    // Calculate end time (add buffer time of 15 minutes for cleaning)
     const start = new Date(startTime);
-    const end = new Date(start.getTime() + (movie.duration + 15) * 60000); // duration in minutes + 15 min buffer
-
-    // Check for overlapping screenings
+    const end = calcEndTime(start, movie.duration);
     const overlapping = await checkOverlap(hallId, start, end);
 
     if (overlapping.length > 0) {
-      const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-      const halls = dedupeHalls(await Hall.find({ isUnderMaintenance: false }).sort({ name: 1 }));
-      
-      const overlappingInfo = overlapping.map(s => 
-        `"${s.movie.title}" from ${s.startTime.toLocaleString()} to ${s.endTime.toLocaleString()}`
-      ).join(', ');
-
-      return res.render('screenings/new', { 
-        movies, 
-        halls, 
-        error: `Screening time conflicts with existing screening(s) in ${hall.name}: ${overlappingInfo}`,
-        staff: req.session 
-      });
+      const info = overlapping.map(s => `"${s.movie.title}" at ${s.startTime.toLocaleString()}`).join(', ');
+      return renderNew(`Time conflicts with: ${info}`);
     }
 
-    // Create new screening
-    const newScreening = new Screening({
-      movie: movieId,
-      hall: hallId,
-      startTime: start,
-      endTime: end
-    });
-
-    await newScreening.save();
+    await new Screening({ movie: movieId, hall: hallId, startTime: start, endTime: end }).save();
     res.redirect('/dashboard?created=1');
   } catch (error) {
     console.error('Error creating screening:', error);
-    const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-    const halls = dedupeHalls(await Hall.find({ isUnderMaintenance: false }).sort({ name: 1 }));
-    res.render('screenings/new', { 
-      movies, 
-      halls, 
-      error: 'Failed to create screening: ' + error.message,
-      staff: req.session 
-    });
+    renderNew('Failed to create screening: ' + error.message);
   }
 });
 
-// view screening get
+// GET - View a single screening
 router.get('/:id', async (req, res) => {
   try {
-    const screening = await Screening.findById(req.params.id)
-      .populate('movie')
-      .populate('hall');
-    
-    if (!screening) {
-      return res.status(404).send('Screening not found');
-    }
-
+    const screening = await Screening.findById(req.params.id).populate('movie').populate('hall');
+    if (!screening) return res.status(404).send('Screening not found');
     const success = req.query.updated ? 'Screening updated successfully.' : null;
     res.render('screenings/view', { screening, success, staff: req.session });
   } catch (error) {
@@ -283,27 +184,13 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// edit screening render get
+// GET - Edit screening form
 router.get('/:id/edit', async (req, res) => {
   try {
-    const screening = await Screening.findById(req.params.id)
-      .populate('movie')
-      .populate('hall');
-    
-    if (!screening) {
-      return res.status(404).send('Screening not found');
-    }
-
-    const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-    const halls = dedupeHalls(await Hall.find().sort({ name: 1 })); // Show all halls for editing
-
-    res.render('screenings/edit', { 
-      screening, 
-      movies, 
-      halls, 
-      error: null, 
-      staff: req.session 
-    });
+    const screening = await Screening.findById(req.params.id).populate('movie').populate('hall');
+    if (!screening) return res.status(404).send('Screening not found');
+    const { movies, halls } = await getFormData();
+    res.render('screenings/edit', { screening, movies, halls, error: null, staff: req.session });
   } catch (error) {
     console.error('Error fetching screening:', error);
     res.status(500).send('Error fetching screening');
@@ -312,124 +199,48 @@ router.get('/:id/edit', async (req, res) => {
 
 // POST - Update screening
 router.post('/:id', async (req, res) => {
+  const renderEdit = async (error) => {
+    const screening = await Screening.findById(req.params.id).populate('movie').populate('hall');
+    const { movies, halls } = await getFormData();
+    res.render('screenings/edit', { screening, movies, halls, error, staff: req.session });
+  };
+
   try {
     const { movieId, hallId, startTime } = req.body;
     const screening = await Screening.findById(req.params.id);
+    if (!screening) return res.status(404).send('Screening not found');
 
-    if (!screening) {
-      return res.status(404).send('Screening not found');
-    }
-
-    // Get movie to calculate end time
     const movie = await Movie.findById(movieId);
-    if (!movie) {
-      const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-      const halls = dedupeHalls(await Hall.find().sort({ name: 1 }));
-      const currentScreening = await Screening.findById(req.params.id)
-        .populate('movie')
-        .populate('hall');
-      return res.render('screenings/edit', { 
-        screening: currentScreening, 
-        movies, 
-        halls, 
-        error: 'Selected movie not found',
-        staff: req.session 
-      });
-    }
+    if (!movie) return renderEdit('Selected movie not found.');
 
-    // Get hall and check if it's under maintenance
     const hall = await Hall.findById(hallId);
-    if (!hall) {
-      const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-      const halls = dedupeHalls(await Hall.find().sort({ name: 1 }));
-      const currentScreening = await Screening.findById(req.params.id)
-        .populate('movie')
-        .populate('hall');
-      return res.render('screenings/edit', { 
-        screening: currentScreening, 
-        movies, 
-        halls, 
-        error: 'Selected hall not found',
-        staff: req.session 
-      });
-    }
+    if (!hall) return renderEdit('Selected hall not found.');
+    if (hall.isUnderMaintenance) return renderEdit(`Hall "${hall.name}" is currently under maintenance.`);
 
-    if (hall.isUnderMaintenance) {
-      const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-      const halls = dedupeHalls(await Hall.find().sort({ name: 1 }));
-      const currentScreening = await Screening.findById(req.params.id)
-        .populate('movie')
-        .populate('hall');
-      return res.render('screenings/edit', { 
-        screening: currentScreening, 
-        movies, 
-        halls, 
-        error: `Hall "${hall.name}" is currently under maintenance`,
-        staff: req.session 
-      });
-    }
-
-    // Calculate new end time
     const start = new Date(startTime);
-    const end = new Date(start.getTime() + (movie.duration + 15) * 60000);
-
-    // Check for overlapping screenings (excluding current screening)
+    const end = calcEndTime(start, movie.duration);
     const overlapping = await checkOverlap(hallId, start, end, screening._id);
 
     if (overlapping.length > 0) {
-      const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-      const halls = dedupeHalls(await Hall.find().sort({ name: 1 }));
-      const currentScreening = await Screening.findById(req.params.id)
-        .populate('movie')
-        .populate('hall');
-      
-      const overlappingInfo = overlapping.map(s => 
-        `"${s.movie.title}" from ${s.startTime.toLocaleString()} to ${s.endTime.toLocaleString()}`
-      ).join('; ');
-
-      return res.render('screenings/edit', { 
-        screening: currentScreening, 
-        movies, 
-        halls, 
-        error: `Screening time conflicts with existing screening(s): ${overlappingInfo}`,
-        staff: req.session 
-      });
+      const info = overlapping.map(s => `"${s.movie.title}" at ${s.startTime.toLocaleString()}`).join('; ');
+      return renderEdit(`Time conflicts with: ${info}`);
     }
 
-    // Update screening
     screening.movie = movieId;
     screening.hall = hallId;
     screening.startTime = start;
     screening.endTime = end;
-
     await screening.save();
     res.redirect('/dashboard?updated=1');
   } catch (error) {
     console.error('Error updating screening:', error);
-    const movies = await Movie.find({ isActive: true }).sort({ title: 1 });
-    const halls = dedupeHalls(await Hall.find().sort({ name: 1 }));
-    const screening = await Screening.findById(req.params.id)
-      .populate('movie')
-      .populate('hall');
-    res.render('screenings/edit', { 
-      screening, 
-      movies, 
-      halls, 
-      error: 'Failed to update screening: ' + error.message,
-      staff: req.session 
-    });
+    renderEdit('Failed to update screening: ' + error.message);
   }
 });
 
-// POST - Delete screening
+// POST - Delete a screening
 router.post('/:id/delete', async (req, res) => {
   try {
-    const screening = await Screening.findById(req.params.id);
-
-    if (!screening) {
-      return res.redirect('/admin/screenings');
-    }
-
     await Screening.findByIdAndDelete(req.params.id);
     res.redirect('/admin/screenings?deleted=1');
   } catch (error) {
