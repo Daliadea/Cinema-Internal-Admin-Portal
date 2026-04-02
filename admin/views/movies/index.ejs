@@ -35,10 +35,18 @@
           </select>
         </div>
         <div>
-          <label for="status" style="display: block; font-size: 0.85rem; margin-bottom: 0.35rem; color: var(--light-text);">Status</label>
+          <label for="audienceStatus" style="display: block; font-size: 0.85rem; margin-bottom: 0.35rem; color: var(--light-text);">Audience Status</label>
+          <select id="audienceStatus" name="audienceStatus" class="form-control" style="width: 100%; padding: 0.5rem;">
+            <option value="">All</option>
+            <option value="now_showing" <%= typeof filters !== 'undefined' && filters.audienceStatus === 'now_showing' ? 'selected' : '' %>>Now Showing</option>
+            <option value="coming_soon" <%= typeof filters !== 'undefined' && filters.audienceStatus === 'coming_soon' ? 'selected' : '' %>>Coming Soon</option>
+          </select>
+        </div>
+        <div>
+          <label for="status" style="display: block; font-size: 0.85rem; margin-bottom: 0.35rem; color: var(--light-text);">Active Status</label>
           <select id="status" name="status" class="form-control" style="width: 100%; padding: 0.5rem;">
             <option value="">All</option>
-            <option value="active" <%= typeof filters !== 'undefined' && filters.status === 'active' ? 'selected' : '' %>>Active</option>
+            <option value="active"   <%= typeof filters !== 'undefined' && filters.status === 'active'   ? 'selected' : '' %>>Active</option>
             <option value="inactive" <%= typeof filters !== 'undefined' && filters.status === 'inactive' ? 'selected' : '' %>>Inactive</option>
           </select>
         </div>
@@ -59,6 +67,14 @@
     <div style="background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%); color: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: var(--shadow);">
       <div style="font-size: 0.8rem; opacity: 0.9; text-transform: uppercase; margin-bottom: 0.5rem;">Inactive</div>
       <div style="font-size: 2.5rem; font-weight: 800;"><%= movies.filter(m => !m.isActive).length %></div>
+    </div>
+    <div style="background: linear-gradient(135deg, #e94560 0%, #c73652 100%); color: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: var(--shadow);">
+      <div style="font-size: 0.8rem; opacity: 0.9; text-transform: uppercase; margin-bottom: 0.5rem;">Now Showing</div>
+      <div style="font-size: 2.5rem; font-weight: 800;"><%= movies.filter(m => m.status === 'now_showing').length %></div>
+    </div>
+    <div style="background: linear-gradient(135deg, #f5c518 0%, #e6b800 100%); color: #1a1a00; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: var(--shadow);">
+      <div style="font-size: 0.8rem; opacity: 0.8; text-transform: uppercase; margin-bottom: 0.5rem; font-weight: 700;">Coming Soon</div>
+      <div style="font-size: 2.5rem; font-weight: 800;"><%= movies.filter(m => m.status === 'coming_soon').length %></div>
     </div>
     <div style="background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-light) 100%); color: white; padding: 1.5rem; border-radius: 12px; text-align: center; box-shadow: var(--shadow);">
       <div style="font-size: 0.8rem; opacity: 0.9; text-transform: uppercase; margin-bottom: 0.5rem;">Total</div>
@@ -109,11 +125,18 @@
                     </span>
                   </td>
                   <td>
-                    <% if (movie.isActive) { %>
-                      <span class="badge badge-success">Active</span>
-                    <% } else { %>
-                      <span class="badge badge-secondary">Inactive</span>
-                    <% } %>
+                    <div style="display: flex; flex-direction: column; gap: 0.3rem;">
+                      <% if (movie.isActive) { %>
+                        <span class="badge badge-success">Active</span>
+                      <% } else { %>
+                        <span class="badge badge-secondary">Inactive</span>
+                      <% } %>
+                      <% if (movie.status === 'coming_soon') { %>
+                        <span style="background: rgba(245,197,24,0.15); color: #b8920a; border: 1px solid rgba(245,197,24,0.4); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.73rem; font-weight: 700; white-space: nowrap;">Coming Soon</span>
+                      <% } else { %>
+                        <span style="background: rgba(46,204,113,0.12); color: var(--success-color); border: 1px solid rgba(46,204,113,0.3); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.73rem; font-weight: 700; white-space: nowrap;">Now Showing</span>
+                      <% } %>
+                    </div>
                   </td>
                   <td style="color: var(--light-text);"><%= new Date(movie.createdAt).toLocaleDateString('en-CA') %></td>
                   <td>

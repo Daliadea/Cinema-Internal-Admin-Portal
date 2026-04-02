@@ -69,24 +69,19 @@ router.get('/', async (req, res) => {
     if (movieId && mongoose.Types.ObjectId.isValid(movieId)) query.movie = new mongoose.Types.ObjectId(movieId);
     if (hallId  && mongoose.Types.ObjectId.isValid(hallId))  query.hall  = new mongoose.Types.ObjectId(hallId);
 
+    // Filter by status: upcoming = not started, ongoing = currently playing, past = already ended
     if (status === 'upcoming') {
-      query.startTime = hasDateRange ? { $gt: now, ...dateRange } : { $gt: now };
+      query.startTime = { $gt: now };
     } else if (status === 'ongoing') {
-      const startCond = { $lte: now };
-      if (hasDateRange) {
-        if (dateRange.$gte) startCond.$gte = dateRange.$gte;
-        if (dateRange.$lte) startCond.$lte = dateRange.$lte < now ? dateRange.$lte : now;
-      }
-      query.$and = [{ startTime: startCond }, { endTime: { $gte: now } }];
+      query.startTime = { $lte: now }; // started already
+      query.endTime   = { $gte: now }; // not finished yet
     } else if (status === 'past') {
-      const endCond = { $lt: now };
-      if (hasDateRange) {
-        if (dateRange.$gte) endCond.$gte = dateRange.$gte;
-        if (dateRange.$lte) endCond.$lte = dateRange.$lte;
-      }
-      query.endTime = endCond;
-    } else if (hasDateRange) {
-      query.startTime = dateRange;
+      query.endTime = { $lt: now };
+    }
+
+    // If the user also set a date range, merge it into the startTime condition
+    if (hasDateRange) {
+      query.startTime = { ...query.startTime, ...dateRange };
     }
 
     const screenings = await Screening.find(query).populate('movie').populate('hall').sort({ startTime: -1 });

@@ -95,6 +95,23 @@
           <small class="text-muted">Optional: Provide a synopsis for staff reference</small>
         </div>
 
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+          <div class="form-group">
+            <label for="status">Audience Status *</label>
+            <select id="status" name="status" class="form-control" required>
+              <option value="now_showing">Now Showing</option>
+              <option value="coming_soon">Coming Soon</option>
+            </select>
+            <small class="text-muted">Shown on the customer-facing CineVillage app</small>
+          </div>
+
+          <div class="form-group">
+            <label for="posterUrl">Poster Image URL</label>
+            <input type="text" id="posterUrl" name="posterUrl" class="form-control" placeholder="https://... or data:image/...">
+            <small class="text-muted">Optional: HTTPS link to an image, or a data URL (paste base64 image)</small>
+          </div>
+        </div>
+
         <div class="form-group">
           <div class="checkbox-group">
             <input 

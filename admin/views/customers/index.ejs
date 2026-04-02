@@ -1,0 +1,179 @@
+<%- include('../partials/header', { title: 'Customer Accounts' }) %>
+
+<div class="container" id="main-content">
+  <%- include('../partials/breadcrumb', { items: [{ label: 'Dashboard', href: '/dashboard' }, { label: 'Customers' }] }) %>
+
+  <div class="page-header">
+    <div>
+      <h1>Customer Accounts</h1>
+      <p style="color: var(--light-text); font-size: 1rem; margin-top: 0.5rem;">
+        Registered CineVillage app users
+      </p>
+    </div>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="stats-grid" style="margin-bottom: 1.5rem;">
+    <div class="stat-card">
+      <h3>Total Customers</h3>
+      <div class="stat-value"><%= customers.length %></div>
+      <p>Registered accounts</p>
+    </div>
+    <div class="stat-card info">
+      <h3>New This Month</h3>
+      <div class="stat-value"><%= newThisMonth %></div>
+      <p>Joined in <%= new Date().toLocaleString('en-US', { month: 'long' }) %></p>
+    </div>
+    <div class="stat-card success">
+      <h3>Total Bookings</h3>
+      <div class="stat-value"><%= totalBookings %></div>
+      <p>Across all customers</p>
+    </div>
+    <div class="stat-card warning">
+      <h3>Total Revenue</h3>
+      <div class="stat-value">$<%= totalRevenue.toFixed(2) %></div>
+      <p>From account holders</p>
+    </div>
+  </div>
+
+  <!-- Search & Sort -->
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-header"><h2 style="margin:0; font-size:1.1rem;">Search & Sort</h2></div>
+    <div class="card-body">
+      <form method="GET" action="/admin/customers"
+            style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+        <div style="flex: 1; min-width: 200px;">
+          <label style="display:block; font-size:0.85rem; margin-bottom:0.35rem; color:var(--light-text);">Name or Email</label>
+          <input type="text" name="search"
+                 value="<%= filters.search || '' %>"
+                 placeholder="Search customers..."
+                 class="form-control">
+        </div>
+        <div>
+          <label style="display:block; font-size:0.85rem; margin-bottom:0.35rem; color:var(--light-text);">Sort By</label>
+          <select name="sort" class="form-control" style="padding:0.5rem; min-width: 150px;">
+            <option value="newest" <%= filters.sort === 'newest' || !filters.sort ? 'selected' : '' %>>Newest First</option>
+            <option value="oldest" <%= filters.sort === 'oldest' ? 'selected' : '' %>>Oldest First</option>
+            <option value="name"   <%= filters.sort === 'name'   ? 'selected' : '' %>>Name A–Z</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:0.5rem;">
+          <button type="submit" class="btn btn-primary">Apply</button>
+          <a href="/admin/customers" class="btn btn-secondary">Clear</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Customers Table -->
+  <div class="card">
+    <div class="card-header">
+      <h2>All Customers</h2>
+      <span class="badge badge-info"><%= customers.length %> accounts</span>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <% if (customers.length === 0) { %>
+        <div class="empty-state" style="padding: 3rem; text-align: center;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">👤</div>
+          <h3><%= filters.search ? 'No customers match your search' : 'No customer accounts yet' %></h3>
+          <p style="color: var(--light-text);">
+            <%= filters.search ? 'Try a different search term.' : 'Customers will appear here once they register on the CineVillage app.' %>
+          </p>
+          <% if (filters.search) { %>
+            <a href="/admin/customers" class="btn btn-secondary" style="margin-top: 1rem;">Clear Search</a>
+          <% } %>
+        </div>
+      <% } else { %>
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+            <thead>
+              <tr style="background: var(--light-bg); border-bottom: 2px solid var(--border-color);">
+                <th style="padding: 0.85rem 1rem; text-align: left; color: var(--light-text); font-weight: 600;">Customer</th>
+                <th style="padding: 0.85rem 1rem; text-align: center; color: var(--light-text); font-weight: 600;">Bookings</th>
+                <th style="padding: 0.85rem 1rem; text-align: center; color: var(--light-text); font-weight: 600;">Tickets</th>
+                <th style="padding: 0.85rem 1rem; text-align: right; color: var(--light-text); font-weight: 600;">Total Spent</th>
+                <th style="padding: 0.85rem 1rem; text-align: left; color: var(--light-text); font-weight: 600; white-space: nowrap;">Last Booking</th>
+                <th style="padding: 0.85rem 1rem; text-align: left; color: var(--light-text); font-weight: 600; white-space: nowrap;">Joined</th>
+                <th style="padding: 0.85rem 1rem; text-align: center; color: var(--light-text); font-weight: 600;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% customers.forEach(c => {
+                   const initials = c.name.split(' ').map(p => p[0]).join('').toUpperCase().slice(0, 2);
+                   const s = c.stats;
+              %>
+                <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.15s;"
+                    onmouseover="this.style.background='var(--light-bg)'"
+                    onmouseout="this.style.background=''">
+
+                  <!-- Customer info -->
+                  <td style="padding: 0.85rem 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                      <div style="width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, #e94560, #c73652); color: white; font-weight: 800; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <%= initials %>
+                      </div>
+                      <div>
+                        <div style="font-weight: 600; color: var(--dark-text);"><%= c.name %></div>
+                        <div style="font-size: 0.8rem; color: var(--light-text);"><%= c.email %></div>
+                      </div>
+                    </div>
+                  </td>
+
+                  <!-- Bookings -->
+                  <td style="padding: 0.85rem 1rem; text-align: center;">
+                    <% if (s.totalBookings > 0) { %>
+                      <span style="background: rgba(58,134,255,0.15); color: #3a86ff; padding: 0.2rem 0.6rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem;">
+                        <%= s.totalBookings %>
+                      </span>
+                    <% } else { %>
+                      <span style="color: var(--light-text); font-size: 0.85rem;">—</span>
+                    <% } %>
+                  </td>
+
+                  <!-- Tickets -->
+                  <td style="padding: 0.85rem 1rem; text-align: center;">
+                    <span style="color: var(--dark-text); font-weight: 600;"><%= s.totalTickets || '—' %></span>
+                  </td>
+
+                  <!-- Total spent -->
+                  <td style="padding: 0.85rem 1rem; text-align: right;">
+                    <% if (s.totalSpent > 0) { %>
+                      <span style="font-weight: 700; color: var(--success-color);">$<%= s.totalSpent.toFixed(2) %></span>
+                    <% } else { %>
+                      <span style="color: var(--light-text);">$0.00</span>
+                    <% } %>
+                  </td>
+
+                  <!-- Last booking -->
+                  <td style="padding: 0.85rem 1rem; font-size: 0.85rem; color: var(--light-text); white-space: nowrap;">
+                    <% if (s.lastBooking) { %>
+                      <%= new Date(s.lastBooking).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                    <% } else { %>
+                      <span style="color: var(--light-text);">Never booked</span>
+                    <% } %>
+                  </td>
+
+                  <!-- Joined -->
+                  <td style="padding: 0.85rem 1rem; font-size: 0.85rem; color: var(--light-text); white-space: nowrap;">
+                    <%= new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                  </td>
+
+                  <!-- Actions -->
+                  <td style="padding: 0.85rem 1rem; text-align: center;">
+                    <a href="/admin/customers/<%= c._id %>"
+                       class="btn btn-secondary"
+                       style="padding: 0.35rem 0.85rem; font-size: 0.82rem;">
+                      View
+                    </a>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

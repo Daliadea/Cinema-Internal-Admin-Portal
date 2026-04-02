@@ -32,21 +32,21 @@
     </div>
     <div class="card-body">
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
-        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--accent-color);">
+        <div style="background: var(--light-bg); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--accent-color);">
           <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Hall Name</h3>
-          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);"><%= hall.name %></p>
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--dark-text);"><%= hall.name %></p>
         </div>
-        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--success-color);">
+        <div style="background: var(--light-bg); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--success-color);">
           <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Total Capacity</h3>
-          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);"><%= hall.rows * hall.columns %> seats</p>
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--dark-text);"><%= hall.rows * hall.columns %> seats</p>
         </div>
-        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--warning-color);">
+        <div style="background: var(--light-bg); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--warning-color);">
           <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Layout</h3>
-          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);"><%= hall.rows %> x <%= hall.columns %></p>
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--dark-text);"><%= hall.rows %> x <%= hall.columns %></p>
         </div>
-        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--danger-color);">
+        <div style="background: var(--light-bg); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--danger-color);">
           <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Wheelchair Accessible</h3>
-          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);">
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--dark-text);">
             <% if (hall.wheelchairSeats && hall.wheelchairSeats.length > 0) { %>
               <%= hall.wheelchairSeats.length %> seats
             <% } else { %>
@@ -57,7 +57,7 @@
       </div>
 
       <% if (hall.wheelchairSeats && hall.wheelchairSeats.length > 0) { %>
-        <div style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--accent-color); margin-bottom: 2rem;">
+        <div style="background: var(--light-bg); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--accent-color); margin-bottom: 2rem;">
           <h3 style="color: var(--accent-color); font-size: 1rem; margin-bottom: 1rem; font-weight: 700;">Wheelchair Accessible Seats</h3>
           <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
             <% hall.wheelchairSeats.forEach(seat => { %>
@@ -67,7 +67,7 @@
         </div>
       <% } %>
 
-      <div style="padding: 1.5rem; background: #f8f9fa; border-radius: 12px;">
+      <div style="padding: 1.5rem; background: var(--light-bg); border-radius: 12px;">
         <p style="color: var(--light-text); font-size: 0.9rem;">
           <strong style="color: var(--dark-text);">Created:</strong> <%= new Date(hall.createdAt).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' }) %>
           <% if (hall.updatedAt && hall.updatedAt.toString() !== hall.createdAt.toString()) { %>
@@ -131,8 +131,8 @@
     </div>
   </div>
 
-  <div class="card" style="border: 2px solid var(--danger-color); background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);">
-    <div class="card-header" style="background: linear-gradient(135deg, #fee 0%, #fdd 100%);">
+  <div class="card" style="border: 2px solid var(--danger-color);">
+    <div class="card-header">
       <h2 style="color: var(--danger-color);">Danger Zone</h2>
     </div>
     <div class="card-body">

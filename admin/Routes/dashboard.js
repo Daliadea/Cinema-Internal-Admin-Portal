@@ -4,6 +4,7 @@ const router = express.Router();
 const Movie = require('../models/Movie');
 const Hall = require('../models/Hall');
 const Screening = require('../models/Screening');
+const Booking = require('../models/Booking');
 
 // Render everything on the dashboard
 router.get('/', async (req, res) => {
@@ -85,6 +86,21 @@ router.get('/', async (req, res) => {
       return true;
     });
 
+    // Booking stats
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(todayStart);
+    todayEnd.setDate(todayEnd.getDate() + 1);
+
+    const todayBookings = await Booking.find({ createdAt: { $gte: todayStart, $lt: todayEnd } });
+    const ticketsSoldToday = todayBookings.reduce((sum, b) => sum + b.seats.length, 0);
+    const revenueTodayRaw = todayBookings.reduce((sum, b) => sum + b.totalAmount, 0);
+    const revenueToday = revenueTodayRaw.toFixed(2);
+
+    const allBookings = await Booking.find();
+    const totalRevenue = allBookings.reduce((sum, b) => sum + b.totalAmount, 0).toFixed(2);
+    const totalBookings = allBookings.length;
+
     // Success message passed via query string from redirects
     let success = null;
     if (req.query.created) success = 'Screening scheduled successfully.';
@@ -100,6 +116,10 @@ router.get('/', async (req, res) => {
       hallsUnderMaintenance,
       totalMovies,
       totalUpcomingScreenings,
+      ticketsSoldToday,
+      revenueToday,
+      totalRevenue,
+      totalBookings,
       success,
       movies,
       halls,

@@ -1,0 +1,110 @@
+<%- include('../partials/header', { title: customer.name }) %>
+
+<div class="container" id="main-content">
+  <%- include('../partials/breadcrumb', { items: [
+    { label: 'Dashboard', href: '/dashboard' },
+    { label: 'Customers', href: '/admin/customers' },
+    { label: customer.name }
+  ] }) %>
+
+  <%
+    const now = new Date();
+    const upcoming = bookings.filter(b => b.screening && new Date(b.screening.startTime) >= now);
+    const past     = bookings.filter(b => b.screening && new Date(b.screening.startTime) <  now);
+    const initials = customer.name.split(' ').map(p => p[0]).join('').toUpperCase().slice(0, 2);
+  %>
+
+  <!-- Profile Header -->
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-body">
+      <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+
+        <!-- Avatar -->
+        <div style="width: 72px; height: 72px; border-radius: 16px; flex-shrink: 0;
+                    background: linear-gradient(135deg, #e94560, #c73652);
+                    display: flex; align-items: center; justify-content: center;
+                    color: white; font-weight: 800; font-size: 1.6rem;">
+          <%= initials %>
+        </div>
+
+        <!-- Name / email -->
+        <div style="flex: 1; min-width: 180px;">
+          <h1 style="font-size: 1.6rem; font-weight: 800; margin: 0 0 0.25rem;">
+            <%= customer.name %>
+          </h1>
+          <p style="color: var(--light-text); margin: 0; font-size: 0.95rem;">
+            <%= customer.email %>
+          </p>
+          <p style="color: var(--light-text); margin: 0.25rem 0 0; font-size: 0.85rem;">
+            Member since <%= new Date(customer.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) %>
+          </p>
+        </div>
+
+        <!-- Quick stats -->
+        <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+          <div style="text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: 800; color: var(--accent-color);"><%= bookings.length %></div>
+            <div style="font-size: 0.8rem; color: var(--light-text); margin-top: 0.15rem;">Bookings</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: 800; color: var(--success-color);"><%= totalTickets %></div>
+            <div style="font-size: 0.8rem; color: var(--light-text); margin-top: 0.15rem;">Tickets</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: 800; color: var(--warning-color);">$<%= totalSpent.toFixed(2) %></div>
+            <div style="font-size: 0.8rem; color: var(--light-text); margin-top: 0.15rem;">Total Spent</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: 800; color: #3a86ff;"><%= upcomingCount %></div>
+            <div style="font-size: 0.8rem; color: var(--light-text); margin-top: 0.15rem;">Upcoming</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Booking History -->
+  <% if (bookings.length === 0) { %>
+    <div class="card">
+      <div class="card-body">
+        <div class="empty-state" style="padding: 3rem; text-align: center;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">🎬</div>
+          <h3>No bookings yet</h3>
+          <p style="color: var(--light-text);">This customer hasn't made any bookings yet.</p>
+        </div>
+      </div>
+    </div>
+
+  <% } else { %>
+
+    <!-- Upcoming bookings -->
+    <% if (upcoming.length > 0) { %>
+      <div class="card" style="margin-bottom: 1.5rem;">
+        <div class="card-header">
+          <h2>Upcoming Screenings</h2>
+          <span class="badge badge-success"><%= upcoming.length %></span>
+        </div>
+        <div class="card-body" style="padding: 0;">
+          <%- include('_booking_table', { bookings: upcoming, isUpcoming: true }) %>
+        </div>
+      </div>
+    <% } %>
+
+    <!-- Past bookings -->
+    <% if (past.length > 0) { %>
+      <div class="card">
+        <div class="card-header">
+          <h2>Past Bookings</h2>
+          <span class="badge badge-info"><%= past.length %></span>
+        </div>
+        <div class="card-body" style="padding: 0;">
+          <%- include('_booking_table', { bookings: past, isUpcoming: false }) %>
+        </div>
+      </div>
+    <% } %>
+
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

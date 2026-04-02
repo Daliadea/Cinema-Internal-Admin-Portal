@@ -98,6 +98,30 @@
     </div>
   </div>
 
+  <!-- Booking Stats -->
+  <div class="stats-grid" style="margin-top: 0;">
+    <div class="stat-card warning">
+      <h3>Tickets Sold Today</h3>
+      <div class="stat-value"><%= ticketsSoldToday %></div>
+      <p>Seats booked via CineVillage app</p>
+    </div>
+    <div class="stat-card success">
+      <h3>Revenue Today</h3>
+      <div class="stat-value">$<%= revenueToday %></div>
+      <p>From today's bookings</p>
+    </div>
+    <div class="stat-card info">
+      <h3>Total Revenue</h3>
+      <div class="stat-value">$<%= totalRevenue %></div>
+      <p>All-time booking revenue</p>
+    </div>
+    <div class="stat-card success">
+      <h3>Total Bookings</h3>
+      <div class="stat-value"><%= totalBookings %></div>
+      <p><a href="/admin/bookings" style="color: inherit; text-decoration: underline;">View all bookings →</a></p>
+    </div>
+  </div>
+
   <!-- Schedule for selected date -->
   <div class="card">
     <div class="card-header">

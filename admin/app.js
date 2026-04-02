@@ -5,6 +5,7 @@ const port = 3000;
 const mongoose = require("mongoose");
 const session = require("express-session");
 const path = require("path");
+const cors = require("cors");
 
 // Connect to MongoDB 
 const Genre = require('./models/Genre');
@@ -20,6 +21,12 @@ mongoose.connect('mongodb://127.0.0.1:27017/cinema_admin')
     }
   })
   .catch(err => console.error('Failed to connect to MongoDB', err));
+
+// Allow React dev server to call API
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3001'],
+  credentials: true
+}));
 
 // Middleware
 app.use(express.json());
@@ -48,6 +55,12 @@ const hallsRouter = require('./Routes/halls');
 const screeningsRouter = require('./Routes/screenings');
 const genresRouter = require('./Routes/genres');
 const profileRouter = require('./Routes/profile');
+const apiRouter = require('./Routes/api');
+const bookingsAdminRouter = require('./Routes/bookings');
+const customersRouter = require('./Routes/customers');
+
+// Public API routes (no auth required — React app uses these)
+app.use('/api', apiRouter);
 
 // Public routes 
 app.use('/auth', authRouter);
@@ -71,6 +84,8 @@ app.use('/admin/movies', isAuthenticated, moviesRouter);
 app.use('/admin/halls', isAuthenticated, hallsRouter);
 app.use('/admin/screenings', isAuthenticated, screeningsRouter);
 app.use('/admin/genres', isAuthenticated, genresRouter);
+app.use('/admin/bookings', isAuthenticated, bookingsAdminRouter);
+app.use('/admin/customers', isAuthenticated, customersRouter);
 
 // Demo route to show custom 500 page (for profile "View 500 Page" button)
 app.get('/demo/500', (req, res) => {

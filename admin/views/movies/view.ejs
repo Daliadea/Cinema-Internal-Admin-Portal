@@ -29,32 +29,32 @@
     </div>
     <div class="card-body">
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
-        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--accent-color);">
+        <div style="background: var(--light-bg); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--accent-color);">
           <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Title</h3>
-          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);"><%= movie.title %></p>
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--dark-text);"><%= movie.title %></p>
         </div>
-        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--success-color);">
+        <div style="background: var(--light-bg); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--success-color);">
           <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Genre</h3>
-          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);"><%= movie.genre || 'N/A' %></p>
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--dark-text);"><%= movie.genre || 'N/A' %></p>
         </div>
-        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--warning-color);">
+        <div style="background: var(--light-bg); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--warning-color);">
           <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Duration</h3>
-          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);"><%= movie.duration %> mins</p>
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--dark-text);"><%= movie.duration %> mins</p>
         </div>
-        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--danger-color);">
+        <div style="background: var(--light-bg); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--danger-color);">
           <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Rating</h3>
-          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);"><%= movie.rating %>/10</p>
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--dark-text);"><%= movie.rating %>/10</p>
         </div>
       </div>
 
       <% if (movie.description) { %>
-        <div style="background: linear-gradient(135deg, #fff5f7 0%, #ffffff 100%); padding: 2rem; border-radius: 12px; border-left: 4px solid var(--accent-color);">
+        <div style="background: var(--light-bg); padding: 2rem; border-radius: 12px; border-left: 4px solid var(--accent-color);">
           <h3 style="color: var(--primary-color); font-size: 1.1rem; margin-bottom: 1rem; font-weight: 700;">Description</h3>
           <p style="line-height: 1.8; color: var(--dark-text); font-size: 1.05rem;"><%= movie.description %></p>
         </div>
       <% } %>
 
-      <div style="margin-top: 2rem; padding: 1.5rem; background: #f8f9fa; border-radius: 12px;">
+      <div style="margin-top: 2rem; padding: 1.5rem; background: var(--light-bg); border-radius: 12px;">
         <p style="color: var(--light-text); font-size: 0.9rem;">
           <strong style="color: var(--dark-text);">Created:</strong> <%= new Date(movie.createdAt).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' }) %>
           <% if (movie.updatedAt && movie.updatedAt.toString() !== movie.createdAt.toString()) { %>
@@ -112,8 +112,8 @@
     </div>
   </div>
 
-  <div class="card" style="border: 2px solid var(--danger-color); background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);">
-    <div class="card-header" style="background: linear-gradient(135deg, #fee 0%, #fdd 100%);">
+  <div class="card" style="border: 2px solid var(--danger-color);">
+    <div class="card-header">
       <h2 style="color: var(--danger-color);">Danger Zone</h2>
     </div>
     <div class="card-body">

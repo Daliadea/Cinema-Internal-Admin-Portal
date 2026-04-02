@@ -8,6 +8,8 @@ const movieSchema = new Schema({
   genre: String,
   isActive: { type: Boolean, default: true },
   rating: { type: Number, required: true, min: [0, 'Rating must be between 0 and 10'], max: [10, 'Rating must be between 0 and 10'] },
-}, { timestamps: true }); // Automatically handles createdAt/updatedAt
+  status: { type: String, enum: ['now_showing', 'coming_soon'], default: 'now_showing' },
+  posterUrl: { type: String, default: '' }
+}, { timestamps: true });
 
 module.exports = mongoose.model('Movie', movieSchema);

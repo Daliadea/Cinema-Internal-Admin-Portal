@@ -1,0 +1,90 @@
+<div style="overflow-x: auto;">
+  <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+    <thead>
+      <tr style="background: var(--light-bg); border-bottom: 2px solid var(--border-color);">
+        <th style="padding: 0.75rem 1rem; text-align: left; color: var(--light-text); font-weight: 600; white-space: nowrap;">Ref</th>
+        <th style="padding: 0.75rem 1rem; text-align: left; color: var(--light-text); font-weight: 600;">Movie</th>
+        <th style="padding: 0.75rem 1rem; text-align: left; color: var(--light-text); font-weight: 600; white-space: nowrap;">Screening</th>
+        <th style="padding: 0.75rem 1rem; text-align: left; color: var(--light-text); font-weight: 600;">Hall</th>
+        <th style="padding: 0.75rem 1rem; text-align: left; color: var(--light-text); font-weight: 600;">Seats</th>
+        <th style="padding: 0.75rem 1rem; text-align: right; color: var(--light-text); font-weight: 600;">Amount</th>
+        <th style="padding: 0.75rem 1rem; text-align: left; color: var(--light-text); font-weight: 600; white-space: nowrap;">Booked At</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% bookings.forEach(b => { %>
+        <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.15s; opacity: <%= isUpcoming ? 1 : 0.8 %>;"
+            onmouseover="this.style.background='var(--light-bg)'"
+            onmouseout="this.style.background=''">
+
+          <!-- Ref -->
+          <td style="padding: 0.75rem 1rem;">
+            <span style="font-family: monospace; font-size: 0.82rem;
+                         background: <%= isUpcoming ? 'var(--accent-color)' : 'var(--light-bg)' %>;
+                         color: <%= isUpcoming ? 'white' : 'var(--light-text)' %>;
+                         padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700;">
+              <%= b.bookingRef %>
+            </span>
+          </td>
+
+          <!-- Movie -->
+          <td style="padding: 0.75rem 1rem;">
+            <% if (b.screening && b.screening.movie) { %>
+              <a href="/admin/movies/<%= b.screening.movie._id %>"
+                 style="color: var(--accent-color); text-decoration: none; font-weight: 600;">
+                <%= b.screening.movie.title %>
+              </a>
+            <% } else { %>
+              <span style="color: var(--light-text);">Deleted</span>
+            <% } %>
+          </td>
+
+          <!-- Screening date/time -->
+          <td style="padding: 0.75rem 1rem; white-space: nowrap;">
+            <% if (b.screening) { %>
+              <div style="font-weight: 600;">
+                <%= new Date(b.screening.startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+              </div>
+              <div style="font-size: 0.8rem; color: var(--light-text);">
+                <%= new Date(b.screening.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) %>
+              </div>
+            <% } else { %>
+              <span style="color: var(--light-text);">N/A</span>
+            <% } %>
+          </td>
+
+          <!-- Hall -->
+          <td style="padding: 0.75rem 1rem; color: var(--dark-text);">
+            <%= (b.screening && b.screening.hall) ? b.screening.hall.name : '—' %>
+          </td>
+
+          <!-- Seats -->
+          <td style="padding: 0.75rem 1rem;">
+            <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">
+              <% b.seats.forEach(seat => { %>
+                <span style="background: <%= isUpcoming ? 'rgba(46,204,113,0.15)' : 'var(--light-bg)' %>;
+                             color: <%= isUpcoming ? 'var(--success-color)' : 'var(--light-text)' %>;
+                             border: 1px solid <%= isUpcoming ? 'rgba(46,204,113,0.3)' : 'var(--border-color)' %>;
+                             padding: 0.1rem 0.4rem; border-radius: 4px;
+                             font-size: 0.8rem; font-weight: 700; font-family: monospace;">
+                  <%= seat %>
+                </span>
+              <% }) %>
+            </div>
+          </td>
+
+          <!-- Amount -->
+          <td style="padding: 0.75rem 1rem; text-align: right; font-weight: 700;
+                     color: <%= isUpcoming ? 'var(--success-color)' : 'var(--light-text)' %>;">
+            $<%= b.totalAmount.toFixed(2) %>
+          </td>
+
+          <!-- Booked at -->
+          <td style="padding: 0.75rem 1rem; font-size: 0.82rem; color: var(--light-text); white-space: nowrap;">
+            <%= new Date(b.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>

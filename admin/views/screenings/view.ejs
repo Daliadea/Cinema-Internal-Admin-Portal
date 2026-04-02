@@ -34,51 +34,51 @@
     </div>
     <div class="card-body">
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
-        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--accent-color);">
+        <div style="background: var(--light-bg); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--accent-color);">
           <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Movie</h3>
-          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);">
-            <a href="/admin/movies/<%= screening.movie._id %>" style="color: var(--primary-color); text-decoration: none;">
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--dark-text);">
+            <a href="/admin/movies/<%= screening.movie._id %>" style="color: var(--dark-text); text-decoration: none;">
               <%= screening.movie.title %>
             </a>
           </p>
           <p class="text-muted" style="margin-top: 0.5rem;"><%= screening.movie.genre %> | <%= screening.movie.rating %>/10</p>
         </div>
-        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--success-color);">
+        <div style="background: var(--light-bg); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--success-color);">
           <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Hall</h3>
           <% if (screening.hall) { %>
-            <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);">
-              <a href="/admin/halls/<%= screening.hall._id %>" style="color: var(--primary-color); text-decoration: none;">
+            <p style="font-size: 1.35rem; font-weight: 700; color: var(--dark-text);">
+              <a href="/admin/halls/<%= screening.hall._id %>" style="color: var(--dark-text); text-decoration: none;">
                 <%= screening.hall.name %>
               </a>
             </p>
             <p class="text-muted" style="margin-top: 0.5rem;"><%= screening.hall.rows * screening.hall.columns %> seats</p>
           <% } else { %>
-            <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);"><span class="text-muted">Deleted</span></p>
+            <p style="font-size: 1.35rem; font-weight: 700;"><span class="text-muted">Deleted</span></p>
           <% } %>
         </div>
-        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--warning-color);">
+        <div style="background: var(--light-bg); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--warning-color);">
           <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Date</h3>
-          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);">
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--dark-text);">
             <%= new Date(screening.startTime).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) %>
           </p>
         </div>
-        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--danger-color);">
+        <div style="background: var(--light-bg); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--danger-color);">
           <h3 style="color: var(--light-text); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Duration</h3>
-          <p style="font-size: 1.35rem; font-weight: 700; color: var(--primary-color);"><%= screening.movie.duration %> mins</p>
+          <p style="font-size: 1.35rem; font-weight: 700; color: var(--dark-text);"><%= screening.movie.duration %> mins</p>
         </div>
       </div>
 
-      <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 2rem; border-radius: 12px; border-left: 4px solid var(--success-color); margin-bottom: 2rem;">
+      <div style="background: var(--light-bg); padding: 2rem; border-radius: 12px; border-left: 4px solid var(--success-color); margin-bottom: 2rem;">
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;">
           <div>
             <h3 style="color: var(--success-color); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">Start Time</h3>
-            <p style="font-size: 2.25rem; font-weight: 800; color: var(--primary-color);">
+            <p style="font-size: 2.25rem; font-weight: 800; color: var(--dark-text);">
               <%= new Date(screening.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) %>
             </p>
           </div>
           <div>
             <h3 style="color: var(--danger-color); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px;">End Time</h3>
-            <p style="font-size: 2.25rem; font-weight: 800; color: var(--primary-color);">
+            <p style="font-size: 2.25rem; font-weight: 800; color: var(--dark-text);">
               <%= new Date(screening.endTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) %>
             </p>
           </div>
@@ -86,7 +86,7 @@
         <small style="color: var(--success-color); font-weight: 600; margin-top: 1rem; display: block;">End time includes 15-minute cleaning buffer</small>
       </div>
 
-      <div style="padding: 1.5rem; background: #f8f9fa; border-radius: 12px;">
+      <div style="padding: 1.5rem; background: var(--light-bg); border-radius: 12px;">
         <p style="color: var(--light-text); font-size: 0.9rem;">
           <strong style="color: var(--dark-text);">Created:</strong> <%= new Date(screening.createdAt).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' }) %>
           <% if (screening.updatedAt && screening.updatedAt.toString() !== screening.createdAt.toString()) { %>
@@ -108,8 +108,93 @@
     </div>
   <% } %>
 
-  <div class="card" style="border: 2px solid var(--danger-color); background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);">
-    <div class="card-header" style="background: linear-gradient(135deg, #fee 0%, #fdd 100%);">
+  <!-- Seat Map -->
+  <% if (screening.hall) { %>
+    <%
+      const rows = screening.hall.rows;
+      const cols = screening.hall.columns;
+      const bookedSeats = screening.bookedSeats || [];
+      const wheelchairSeats = screening.hall.wheelchairSeats || [];
+      const rowLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const totalSeats = rows * cols;
+      const bookedCount = bookedSeats.length;
+      const availableCount = totalSeats - bookedCount;
+    %>
+    <div class="card">
+      <div class="card-header">
+        <h2>Seat Map — <%= screening.hall.name %></h2>
+        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+          <span class="badge badge-success"><%= availableCount %> Available</span>
+          <span class="badge badge-danger"><%= bookedCount %> Occupied</span>
+          <span class="badge badge-secondary"><%= totalSeats %> Total</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <!-- Legend -->
+        <div style="display: flex; gap: 1.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="width: 28px; height: 28px; background: var(--success-color); border-radius: 6px; opacity: 0.85;"></div>
+            <span style="font-size: 0.9rem;">Available</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="width: 28px; height: 28px; background: var(--danger-color); border-radius: 6px;"></div>
+            <span style="font-size: 0.9rem;">Occupied</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="width: 28px; height: 28px; background: var(--accent-color); border-radius: 6px; opacity: 0.7;"></div>
+            <span style="font-size: 0.9rem;">Wheelchair</span>
+          </div>
+        </div>
+
+        <!-- Screen indicator -->
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; padding: 0.5rem 2rem; border-radius: 8px; margin-bottom: 2rem; font-weight: 600; letter-spacing: 2px; font-size: 0.85rem; max-width: 400px; margin-left: auto; margin-right: auto;">
+          SCREEN
+        </div>
+
+        <!-- Seat grid -->
+        <div style="overflow-x: auto;">
+          <div style="display: inline-block; min-width: 100%;">
+            <% for (let r = 0; r < rows; r++) { %>
+              <div style="display: flex; align-items: center; margin-bottom: 0.4rem; gap: 0.4rem;">
+                <span style="width: 1.5rem; text-align: center; font-weight: 700; color: var(--light-text); font-size: 0.85rem;"><%= rowLetters[r] %></span>
+                <% for (let c = 1; c <= cols; c++) {
+                  const seatCode = rowLetters[r] + c;
+                  const isBooked = bookedSeats.includes(seatCode);
+                  const isWheelchair = wheelchairSeats.includes(seatCode);
+                %>
+                  <div title="<%= seatCode %><%= isBooked ? ' — Occupied' : '' %><%= isWheelchair ? ' (Wheelchair)' : '' %>"
+                       style="
+                         width: 30px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+                         font-size: 0.65rem; font-weight: 700; font-family: monospace; cursor: default;
+                         background: <%= isBooked ? 'var(--danger-color)' : isWheelchair ? 'var(--accent-color)' : 'var(--success-color)' %>;
+                         color: white;
+                         opacity: <%= isBooked ? '1' : '0.85' %>;
+                         border: 2px solid <%= isBooked ? '#c0392b' : isWheelchair ? '#c0392b' : '#27ae60' %>;
+                       ">
+                    <%= seatCode %>
+                  </div>
+                <% } %>
+              </div>
+            <% } %>
+          </div>
+        </div>
+
+        <% if (bookedSeats.length > 0) { %>
+          <div style="margin-top: 1.5rem; padding: 1rem; background: var(--light-bg); border-radius: 8px;">
+            <h4 style="margin-bottom: 0.75rem; font-size: 0.9rem; color: var(--light-text); text-transform: uppercase; letter-spacing: 1px;">Occupied Seats</h4>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.35rem;">
+              <% bookedSeats.forEach(seat => { %>
+                <span style="background: var(--danger-color); color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 700; font-family: monospace;"><%= seat %></span>
+              <% }) %>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  <% } %>
+
+  <div class="card" style="border: 2px solid var(--danger-color);">
+    <div class="card-header">
       <h2 style="color: var(--danger-color);">Cancel Screening</h2>
     </div>
     <div class="card-body">

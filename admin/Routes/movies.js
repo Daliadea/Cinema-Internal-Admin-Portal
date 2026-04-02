@@ -7,7 +7,7 @@ const Genre = require('../models/Genre');
 // List all movies render get (with filtering)
 router.get('/', async (req, res) => {
   try {
-    const { genre, status, search } = req.query;
+    const { genre, status, audienceStatus, search } = req.query;
 
     const query = {};
 
@@ -22,9 +22,14 @@ router.get('/', async (req, res) => {
       query.genre = { $regex: new RegExp(`^${escaped}$`, 'i') };
     }
 
-    // Status filter (active/inactive)
+    // Active/inactive filter
     if (status === 'active') query.isActive = true;
     else if (status === 'inactive') query.isActive = false;
+
+    // Audience status filter (now_showing / coming_soon)
+    if (audienceStatus === 'now_showing' || audienceStatus === 'coming_soon') {
+      query.status = audienceStatus;
+    }
 
     const movies = await Movie.find(query).sort({ createdAt: -1 });
 
@@ -39,7 +44,7 @@ router.get('/', async (req, res) => {
       movies, 
       success, 
       genres: genreList,
-      filters: { genre, status, search },
+      filters: { genre, status, audienceStatus, search },
       staff: req.session 
     });
   } catch (error) {
@@ -62,15 +67,17 @@ router.get('/new', async (req, res) => {
 // form for creating new movie post
 router.post('/', async (req, res) => {
   try {
-    const { title, duration, description, genre, rating, isActive } = req.body;
+    const { title, duration, description, genre, rating, isActive, status, posterUrl } = req.body;
 
     const newMovie = new Movie({
       title,
-      duration: parseInt(duration), // in minutes
+      duration: parseInt(duration),
       description,
       genre,
       rating: parseFloat(rating),
-      isActive: isActive === 'on' || isActive === true
+      isActive: isActive === 'on' || isActive === true,
+      status: status || 'now_showing',
+      posterUrl: posterUrl || ''
     });
 
     await newMovie.save();
@@ -132,20 +139,21 @@ router.get('/:id/edit', async (req, res) => {
 // update movie form post
 router.post('/:id', async (req, res) => {
   try {
-    const { title, duration, description, genre, rating, isActive } = req.body;
+    const { title, duration, description, genre, rating, isActive, status, posterUrl } = req.body;
     const movie = await Movie.findById(req.params.id);
 
     if (!movie) {
       return res.status(404).send('Movie not found');
     }
 
-    // Update movie fields
     movie.title = title;
     movie.duration = parseInt(duration);
     movie.description = description;
     movie.genre = genre;
     movie.rating = parseFloat(rating);
     movie.isActive = isActive === 'on' || isActive === true;
+    movie.status = status || 'now_showing';
+    movie.posterUrl = posterUrl || '';
 
     await movie.save();
     res.redirect('/admin/movies/' + movie._id + '?updated=1');
