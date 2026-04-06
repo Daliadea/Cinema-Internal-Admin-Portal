@@ -7,8 +7,14 @@ const Booking = require('../models/Booking');
 const Customer = require('../models/Customer');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'cinevillage-jwt-secret-2026';
+const MAX_SEATS_PER_BOOKING = 10;
 
-// ── JWT helpers ──────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function isValidObjectId(id) {
+  return /^[a-f\d]{24}$/i.test(id);
+}
+
 function requireAuth(req, res, next) {
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith('Bearer ')) {
@@ -19,7 +25,7 @@ function requireAuth(req, res, next) {
     req.customerId = decoded.customerId;
     next();
   } catch {
-    res.status(401).json({ error: 'Invalid or expired token' });
+    res.status(401).json({ error: 'Session expired. Please sign in again.' });
   }
 }
 
@@ -94,7 +100,7 @@ router.get('/movies', async (req, res) => {
     const { status, genre } = req.query;
     const query = { isActive: true };
     if (status && ['now_showing', 'coming_soon'].includes(status)) query.status = status;
-    if (genre) query.genre = { $regex: new RegExp(`^${genre.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') };
+    if (genre) query.genre = genre;
     const movies = await Movie.find(query).sort({ createdAt: -1 });
     res.json(movies);
   } catch (err) {
@@ -104,6 +110,9 @@ router.get('/movies', async (req, res) => {
 
 // GET /api/movies/:id
 router.get('/movies/:id', async (req, res) => {
+  if (!isValidObjectId(req.params.id)) {
+    return res.status(404).json({ error: 'Movie not found' });
+  }
   try {
     const movie = await Movie.findById(req.params.id);
     if (!movie) return res.status(404).json({ error: 'Movie not found' });
@@ -121,6 +130,9 @@ router.get('/movies/:id', async (req, res) => {
 
 // GET /api/screenings/:id
 router.get('/screenings/:id', async (req, res) => {
+  if (!isValidObjectId(req.params.id)) {
+    return res.status(404).json({ error: 'Screening not found' });
+  }
   try {
     const screening = await Screening.findById(req.params.id)
       .populate('movie')
@@ -139,21 +151,48 @@ router.post('/bookings', requireAuth, async (req, res) => {
   try {
     const { customerName, customerEmail, screeningId, seats } = req.body;
 
+    // ── Input validation ──────────────────────────────────────────────────────
     if (!customerName || !customerEmail || !screeningId || !seats || !seats.length) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
       return res.status(400).json({ error: 'Invalid email address' });
     }
-
-    const screening = await Screening.findById(screeningId).populate('hall');
-    if (!screening) return res.status(404).json({ error: 'Screening not found' });
-    if (new Date(screening.startTime) < new Date()) {
-      return res.status(400).json({ error: 'This screening has already started' });
+    if (!isValidObjectId(screeningId)) {
+      return res.status(404).json({ error: 'Screening not found' });
+    }
+    if (seats.length > MAX_SEATS_PER_BOOKING) {
+      return res.status(400).json({
+        error: `You can book a maximum of ${MAX_SEATS_PER_BOOKING} seats per transaction`
+      });
+    }
+    // Guard against duplicate seats in the request itself
+    const uniqueSeats = [...new Set(seats)];
+    if (uniqueSeats.length !== seats.length) {
+      return res.status(400).json({ error: 'Duplicate seats in request' });
     }
 
-    // Validate seats are within hall bounds
+    // ── Fetch screening ───────────────────────────────────────────────────────
+    const screening = await Screening.findById(screeningId).populate('hall').populate('movie');
+    if (!screening) return res.status(404).json({ error: 'Screening not found' });
+
+    // ── Null hall guard ───────────────────────────────────────────────────────
     const hall = screening.hall;
+    if (!hall) {
+      return res.status(400).json({ error: 'This screening no longer has a valid hall assigned. Please contact support.' });
+    }
+
+    // ── Timing check ──────────────────────────────────────────────────────────
+    if (new Date(screening.startTime) < new Date()) {
+      return res.status(400).json({ error: 'This screening has already started and can no longer be booked' });
+    }
+
+    // ── Active movie check ────────────────────────────────────────────────────
+    if (screening.movie && !screening.movie.isActive) {
+      return res.status(400).json({ error: 'This movie is no longer available for booking' });
+    }
+
+    // ── Validate seats are within hall bounds ─────────────────────────────────
     const rowLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.slice(0, hall.rows);
     const validSeats = [];
     for (let r = 0; r < hall.rows; r++) {
@@ -164,7 +203,7 @@ router.post('/bookings', requireAuth, async (req, res) => {
     const invalidSeat = seats.find(s => !validSeats.includes(s));
     if (invalidSeat) return res.status(400).json({ error: `Invalid seat: ${invalidSeat}` });
 
-    // Atomic update — race condition guard
+    // ── Atomic seat reservation — race condition guard ─────────────────────────
     const updated = await Screening.findOneAndUpdate(
       { _id: screeningId, bookedSeats: { $not: { $elemMatch: { $in: seats } } } },
       { $push: { bookedSeats: { $each: seats } } },
@@ -173,11 +212,12 @@ router.post('/bookings', requireAuth, async (req, res) => {
 
     if (!updated) {
       return res.status(409).json({
-        error: 'One or more seats you selected were just taken. Please choose different seats.'
+        error: 'One or more seats you selected were just taken. Please choose different seats.',
+        contestedSeats: seats,
       });
     }
 
-    // Save the booking record — if this fails, roll back the seat reservation
+    // ── Save booking record — rollback seats on failure ───────────────────────
     const totalAmount = seats.length * (screening.price || 12);
     let booking;
     try {
@@ -192,7 +232,6 @@ router.post('/bookings', requireAuth, async (req, res) => {
       await booking.save();
     } catch (saveErr) {
       console.error('Booking record save failed, rolling back seat reservation:', saveErr.message);
-      // Release the seats back so the customer can try again
       await Screening.findByIdAndUpdate(screeningId, {
         $pull: { bookedSeats: { $in: seats } }
       });

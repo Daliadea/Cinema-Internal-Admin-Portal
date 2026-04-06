@@ -4,29 +4,27 @@ import MovieCard from '../components/MovieCard'
 
 const API = 'http://localhost:3000'
 
+// Per-tab display config — colour, heading text, and empty-state message
 const TAB_CONFIG = {
   now_showing: {
     label: 'Now Showing',
     accent: '#e94560',
-    accentAlpha: 'rgba(233,69,96,0.12)',
-    accentBorder: 'rgba(233,69,96,0.25)',
-    dot: '#e94560',
-    badge: 'rgba(46,204,113,0.15)',
-    badgeColor: '#2ecc71',
     description: 'Book your seats for films on screen right now',
     emptyMsg: 'No movies are currently showing. Check back soon!',
   },
   coming_soon: {
     label: 'Coming Soon',
     accent: '#f5c518',
-    accentAlpha: 'rgba(245,197,24,0.1)',
-    accentBorder: 'rgba(245,197,24,0.25)',
-    dot: '#f5c518',
-    badge: 'rgba(245,197,24,0.12)',
-    badgeColor: '#f5c518',
     description: 'Upcoming films arriving at CineVillage',
     emptyMsg: 'No upcoming movies announced yet. Stay tuned!',
   },
+}
+
+// Derive semi-transparent versions from the accent colour at render time
+function alpha(hex, opacity) {
+  // Convert e.g. '#e94560' → 'rgba(233, 69, 96, 0.12)'
+  const [r, g, b] = hex.match(/\w\w/g).map(x => parseInt(x, 16))
+  return `rgba(${r},${g},${b},${opacity})`
 }
 
 export default function Browse() {
@@ -81,6 +79,9 @@ export default function Browse() {
   ]
 
   const cfg = TAB_CONFIG[tab]
+  // Pre-compute the two tint variants used in the JSX below
+  const accentAlpha = alpha(cfg.accent, 0.12)
+  const accentBorder = alpha(cfg.accent, 0.28)
 
   return (
     <div>
@@ -91,7 +92,7 @@ export default function Browse() {
 
       {/* ── Page Header ── */}
       <div style={{
-        background: `linear-gradient(180deg, ${cfg.accentAlpha} 0%, transparent 100%)`,
+        background: `linear-gradient(180deg, ${accentAlpha} 0%, transparent 100%)`,
         borderBottom: '1px solid var(--border)',
         padding: '2.5rem 2rem 0',
         transition: 'background 0.3s',
@@ -112,8 +113,8 @@ export default function Browse() {
             {/* Live count pill */}
             {!loading && (
               <div style={{
-                background: cfg.accentAlpha,
-                border: `1px solid ${cfg.accentBorder}`,
+                background: accentAlpha,
+                border: `1px solid ${accentBorder}`,
                 borderRadius: '20px',
                 padding: '0.35rem 1rem',
                 fontSize: '0.82rem',
@@ -125,7 +126,7 @@ export default function Browse() {
                 alignSelf: 'flex-start',
                 marginTop: '0.25rem',
               }}>
-                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: cfg.dot, display: 'inline-block', animation: tab === 'now_showing' ? 'shimmer 1.5s ease-in-out infinite' : 'none' }} />
+                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: cfg.accent, display: 'inline-block', animation: tab === 'now_showing' ? 'shimmer 1.5s ease-in-out infinite' : 'none' }} />
                 {filtered.length} {filtered.length === 1 ? 'film' : 'films'}
               </div>
             )}
@@ -152,7 +153,7 @@ export default function Browse() {
                 transition: 'border-color 0.2s, box-shadow 0.2s',
                 fontFamily: 'inherit',
               }}
-              onFocus={e => { e.target.style.borderColor = cfg.accent; e.target.style.boxShadow = `0 0 0 3px ${cfg.accentAlpha}` }}
+              onFocus={e => { e.target.style.borderColor = cfg.accent; e.target.style.boxShadow = `0 0 0 3px ${accentAlpha}` }}
               onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none' }}
             />
             {search && (
@@ -188,7 +189,7 @@ export default function Browse() {
                 >
                   {t.label}
                   <span style={{
-                    background: active ? t.accentAlpha : 'rgba(255,255,255,0.04)',
+                    background: active ? alpha(t.accent, 0.15) : 'rgba(255,255,255,0.04)',
                     color: active ? t.accent : 'var(--text-muted)',
                     padding: '0.1rem 0.5rem',
                     borderRadius: '20px',
@@ -217,8 +218,8 @@ export default function Browse() {
                   onClick={() => setGenre(g)}
                   style={{
                     padding: '0.3rem 0.85rem',
-                    background: genre === g ? cfg.accentAlpha : 'rgba(255,255,255,0.04)',
-                    border: `1px solid ${genre === g ? cfg.accentBorder : 'var(--border)'}`,
+                    background: genre === g ? accentAlpha : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${genre === g ? accentBorder : 'var(--border)'}`,
                     color: genre === g ? cfg.accent : 'var(--text-muted)',
                     borderRadius: '20px',
                     fontSize: '0.8rem',
@@ -292,11 +293,12 @@ function GridSkeleton() {
 }
 
 function EmptyState({ search, cfg, onClear }) {
+  const isGold = cfg.accent === '#f5c518'
   return (
     <div style={{
       textAlign: 'center', padding: '5rem 2rem',
-      background: cfg.accentAlpha,
-      border: `1px dashed ${cfg.accentBorder}`,
+      background: alpha(cfg.accent, 0.07),
+      border: `1px dashed ${alpha(cfg.accent, 0.28)}`,
       borderRadius: '16px',
     }}>
       <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>🎭</div>
@@ -306,12 +308,12 @@ function EmptyState({ search, cfg, onClear }) {
       <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.92rem' }}>
         {search ? 'Try a different title or clear your search' : cfg.emptyMsg}
       </p>
-      {(search) && (
+      {search && (
         <button
           onClick={onClear}
           style={{
-            background: `linear-gradient(135deg, ${cfg.accent}, ${cfg.accent}cc)`,
-            color: cfg.accent === '#f5c518' ? '#1a1a00' : 'white',
+            background: cfg.accent,
+            color: isGold ? '#1a1a00' : 'white',
             border: 'none', padding: '0.65rem 1.75rem',
             borderRadius: '10px', fontWeight: '700', cursor: 'pointer',
             fontFamily: 'inherit', fontSize: '0.9rem',

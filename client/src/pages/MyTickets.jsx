@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { QRCodeSVG } from 'qrcode.react'
+import AuthModal from '../components/AuthModal'
 
 const API = 'http://localhost:3000'
 
@@ -25,21 +26,33 @@ export default function MyTickets() {
 
   const [bookings, setBookings] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [fetchError, setFetchError] = useState(null)
+
+  // Auth modal — opened directly from the sign-in prompt
+  const [showAuth, setShowAuth] = useState(false)
+  const [authTab, setAuthTab] = useState('login')
 
   useEffect(() => {
     if (customer) loadBookings()
-    else setBookings(null)
+    else { setBookings(null); setFetchError(null) }
   }, [customer])
 
   async function loadBookings() {
     setLoading(true)
+    setFetchError(null)
     try {
       const res = await fetch(`${API}/api/customer/bookings`, {
         headers: { Authorization: `Bearer ${customer.token}` }
       })
-      setBookings(res.ok ? await res.json() : [])
+      if (!res.ok) {
+        setFetchError('Failed to load your bookings. Please try again.')
+        setBookings(null)
+      } else {
+        setBookings(await res.json())
+      }
     } catch {
-      setBookings([])
+      setFetchError('Network error. Please check your connection and try again.')
+      setBookings(null)
     } finally {
       setLoading(false)
     }
@@ -50,28 +63,40 @@ export default function MyTickets() {
   // ── Not signed in ──────────────────────────────────────────────────────────
   if (!customer) {
     return (
-      <div style={{ maxWidth: '520px', margin: '6rem auto', padding: '0 1.5rem', textAlign: 'center' }}>
-        <div style={{ fontSize: '4rem', marginBottom: '1.25rem' }}>🎟️</div>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--text)', marginBottom: '0.5rem' }}>
-          Sign in to view your tickets
-        </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '2rem', lineHeight: '1.6' }}>
-          All your bookings are saved to your account. Sign in to see your upcoming and past screenings.
-        </p>
-        <Link to="/" style={{
-          display: 'inline-block',
-          background: 'linear-gradient(135deg, #e94560, #c73652)',
-          color: 'white', padding: '0.85rem 2.25rem',
-          borderRadius: '12px', fontWeight: '700', fontSize: '1rem',
-          boxShadow: '0 4px 20px rgba(233,69,96,0.35)',
-        }}>
-          Sign In
-        </Link>
-        <p style={{ marginTop: '1.25rem', fontSize: '0.88rem', color: 'var(--text-muted)' }}>
-          Don't have an account?{' '}
-          <Link to="/" style={{ color: 'var(--accent)', fontWeight: '600' }}>Create one free</Link>
-        </p>
-      </div>
+      <>
+        {showAuth && <AuthModal defaultTab={authTab} onClose={() => setShowAuth(false)} />}
+        <div style={{ maxWidth: '520px', margin: '6rem auto', padding: '0 1.5rem', textAlign: 'center' }}>
+          <div style={{ fontSize: '4rem', marginBottom: '1.25rem' }}>🎟️</div>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--text)', marginBottom: '0.5rem' }}>
+            Sign in to view your tickets
+          </h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '2rem', lineHeight: '1.6' }}>
+            All your bookings are saved to your account. Sign in to see your upcoming and past screenings.
+          </p>
+          <button
+            onClick={() => { setAuthTab('login'); setShowAuth(true) }}
+            style={{
+              display: 'inline-block',
+              background: 'linear-gradient(135deg, #e94560, #c73652)',
+              color: 'white', padding: '0.85rem 2.25rem',
+              borderRadius: '12px', fontWeight: '700', fontSize: '1rem',
+              boxShadow: '0 4px 20px rgba(233,69,96,0.35)',
+              border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            Sign In
+          </button>
+          <p style={{ marginTop: '1.25rem', fontSize: '0.88rem', color: 'var(--text-muted)' }}>
+            Don't have an account?{' '}
+            <button
+              onClick={() => { setAuthTab('register'); setShowAuth(true) }}
+              style={{ background: 'none', border: 'none', color: 'var(--accent)', fontWeight: '600', cursor: 'pointer', fontSize: 'inherit', fontFamily: 'inherit', padding: 0 }}
+            >
+              Create one free
+            </button>
+          </p>
+        </div>
+      </>
     )
   }
 
@@ -129,6 +154,28 @@ export default function MyTickets() {
 
       {loading ? (
         <TicketSkeletons />
+      ) : fetchError ? (
+        <div style={{
+          background: 'rgba(231,76,60,0.1)',
+          border: '1px solid rgba(231,76,60,0.3)',
+          borderRadius: '14px', padding: '2rem',
+          textAlign: 'center',
+        }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>⚠️</div>
+          <p style={{ color: '#ff8080', fontWeight: '700', marginBottom: '0.5rem' }}>{fetchError}</p>
+          <button
+            onClick={loadBookings}
+            style={{
+              marginTop: '0.75rem',
+              background: 'linear-gradient(135deg, #e94560, #c73652)',
+              color: 'white', border: 'none',
+              padding: '0.65rem 1.75rem', borderRadius: '10px',
+              fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            Try Again
+          </button>
+        </div>
       ) : !bookings || bookings.length === 0 ? (
         <EmptyTickets onBrowse={() => navigate('/movies')} />
       ) : (
