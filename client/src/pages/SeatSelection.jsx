@@ -371,7 +371,7 @@ export default function SeatSelection() {
                             width: '30px', height: '30px', borderRadius: '6px',
                             border: isSelected ? '2px solid white' : '2px solid transparent',
                             background: bg,
-                            color: isSelected ? '#1a1a00' : isBooked ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.9)',
+                            color: isSelected ? '#003310' : isBooked ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.9)',
                             fontSize: '0.58rem', fontWeight: '700', fontFamily: 'monospace',
                             cursor: (isBooked || isSoldOut) ? 'not-allowed' : isBlocked ? 'not-allowed' : 'pointer',
                             opacity: isBooked ? 0.5 : (isBlocked && !isSelected) ? 0.45 : 1,
@@ -451,7 +451,7 @@ export default function SeatSelection() {
                             onClick={() => toggleSeat(seat)}
                             title="Click to deselect"
                             style={{
-                              background: 'var(--seat-selected)', color: '#1a1a00',
+                              background: 'var(--seat-selected)', color: '#003310',
                               padding: '0.2rem 0.5rem', borderRadius: '5px',
                               fontSize: '0.8rem', fontWeight: '700', fontFamily: 'monospace',
                               cursor: 'pointer',
