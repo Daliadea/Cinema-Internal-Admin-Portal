@@ -1,3 +1,15 @@
+// api.js — Public JSON endpoints for the React customer-facing app.
+// These are separate from the EJS admin routes and return JSON, not HTML.
+// Routes:
+//   GET  /api/screenings           — browse all upcoming screenings
+//   GET  /api/screenings/:id       — single screening detail (with seat map)
+//   GET  /api/movies/:id           — single movie detail page
+//   POST /api/auth/register        — create customer account, returns JWT
+//   POST /api/auth/login           — login, returns JWT
+//   GET  /api/auth/me              — verify JWT, return customer profile
+//   GET  /api/my-tickets           — customer's own booking history (requires JWT)
+//   POST /api/bookings             — create a booking with atomic seat lock (requires JWT)
+
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
@@ -11,10 +23,13 @@ const MAX_SEATS_PER_BOOKING = 10;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+// MongoDB ObjectId must be exactly 24 hex chars; reject bad IDs early
 function isValidObjectId(id) {
   return /^[a-f\d]{24}$/i.test(id);
 }
 
+// JWT middleware: reads "Authorization: Bearer <token>" header,
+// verifies the token, and attaches customerId to req for downstream handlers
 function requireAuth(req, res, next) {
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith('Bearer ')) {
@@ -146,12 +161,13 @@ router.get('/screenings/:id', async (req, res) => {
 
 // ── Bookings ──────────────────────────────────────────────────────────────────
 
-// POST /api/bookings — requires a logged-in customer account
+// POST /api/bookings — requires a logged-in customer (JWT)
+// Flow: validate input → check hall/timing/movie → atomic seat lock → save booking
 router.post('/bookings', requireAuth, async (req, res) => {
   try {
     const { customerName, customerEmail, screeningId, seats } = req.body;
 
-    // ── Input validation ──────────────────────────────────────────────────────
+    // Step 1: Basic input validation
     if (!customerName || !customerEmail || !screeningId || !seats || !seats.length) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -166,33 +182,30 @@ router.post('/bookings', requireAuth, async (req, res) => {
         error: `You can book a maximum of ${MAX_SEATS_PER_BOOKING} seats per transaction`
       });
     }
-    // Guard against duplicate seats in the request itself
+    // Reject if the same seat appears twice in the request
     const uniqueSeats = [...new Set(seats)];
     if (uniqueSeats.length !== seats.length) {
       return res.status(400).json({ error: 'Duplicate seats in request' });
     }
 
-    // ── Fetch screening ───────────────────────────────────────────────────────
+    // Step 2: Load screening with hall and movie
     const screening = await Screening.findById(screeningId).populate('hall').populate('movie');
     if (!screening) return res.status(404).json({ error: 'Screening not found' });
 
-    // ── Null hall guard ───────────────────────────────────────────────────────
     const hall = screening.hall;
     if (!hall) {
       return res.status(400).json({ error: 'This screening no longer has a valid hall assigned. Please contact support.' });
     }
 
-    // ── Timing check ──────────────────────────────────────────────────────────
+    // Step 3: Business rule checks
     if (new Date(screening.startTime) < new Date()) {
       return res.status(400).json({ error: 'This screening has already started and can no longer be booked' });
     }
-
-    // ── Active movie check ────────────────────────────────────────────────────
     if (screening.movie && !screening.movie.isActive) {
       return res.status(400).json({ error: 'This movie is no longer available for booking' });
     }
 
-    // ── Validate seats are within hall bounds ─────────────────────────────────
+    // Step 4: Validate seat codes are within hall grid (e.g. A1 to E8)
     const rowLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.slice(0, hall.rows);
     const validSeats = [];
     for (let r = 0; r < hall.rows; r++) {
@@ -203,7 +216,9 @@ router.post('/bookings', requireAuth, async (req, res) => {
     const invalidSeat = seats.find(s => !validSeats.includes(s));
     if (invalidSeat) return res.status(400).json({ error: `Invalid seat: ${invalidSeat}` });
 
-    // ── Atomic seat reservation — race condition guard ─────────────────────────
+    // Step 5: Atomic seat reservation — race condition guard
+    // findOneAndUpdate only succeeds if NONE of the requested seats are already in bookedSeats.
+    // If two users try the same seat at the same time, only one update succeeds; the other gets null.
     const updated = await Screening.findOneAndUpdate(
       { _id: screeningId, bookedSeats: { $not: { $elemMatch: { $in: seats } } } },
       { $push: { bookedSeats: { $each: seats } } },
@@ -211,13 +226,17 @@ router.post('/bookings', requireAuth, async (req, res) => {
     );
 
     if (!updated) {
+      // Fetch the current bookedSeats to find exactly which requested seats are already taken
+      const current = await Screening.findById(screeningId).select('bookedSeats');
+      const contestedSeats = seats.filter(s => current && current.bookedSeats.includes(s));
+      // 409 = conflict; front-end shows "seat just taken" message
       return res.status(409).json({
         error: 'One or more seats you selected were just taken. Please choose different seats.',
-        contestedSeats: seats,
+        contestedSeats,
       });
     }
 
-    // ── Save booking record — rollback seats on failure ───────────────────────
+    // Step 6: Save booking record; rollback seat lock if save fails
     const totalAmount = seats.length * (screening.price || 12);
     let booking;
     try {
@@ -231,6 +250,7 @@ router.post('/bookings', requireAuth, async (req, res) => {
       });
       await booking.save();
     } catch (saveErr) {
+      // Something went wrong saving — undo the seat reservation so they're free again
       console.error('Booking record save failed, rolling back seat reservation:', saveErr.message);
       await Screening.findByIdAndUpdate(screeningId, {
         $pull: { bookedSeats: { $in: seats } }
@@ -240,6 +260,7 @@ router.post('/bookings', requireAuth, async (req, res) => {
       });
     }
 
+    // Step 7: Return booking confirmation to React app
     res.status(201).json({
       success: true,
       bookingRef: booking.bookingRef,

@@ -1,3 +1,7 @@
+// customers.js — Admin view of all registered customer accounts (read-only, EJS).
+// Uses MongoDB aggregation to calculate per-customer booking stats in one query
+// instead of running individual queries for each customer.
+
 const express = require('express');
 const router = express.Router();
 const Customer = require('../models/Customer');
@@ -24,15 +28,17 @@ router.get('/', async (req, res) => {
       .select('-password')
       .sort(sortMap[sort] || sortMap.newest);
 
-    // Aggregate booking stats per customer in one query
+    // Aggregate: group all bookings by customer ID in a single DB query
+    // instead of running a separate query per customer.
+    // $match limits to only the filtered customers; $group sums up their totals.
     const bookingStats = await Booking.aggregate([
       { $match: { customer: { $in: customers.map(c => c._id) } } },
       {
         $group: {
-          _id: '$customer',
-          totalBookings: { $sum: 1 },
+          _id: '$customer',           // group key: one result per customer
+          totalBookings: { $sum: 1 }, // count every booking document
           totalSpent:    { $sum: '$totalAmount' },
-          totalTickets:  { $sum: { $size: '$seats' } },
+          totalTickets:  { $sum: { $size: '$seats' } }, // seats is an array; $size counts it
           lastBooking:   { $max: '$createdAt' },
         }
       }

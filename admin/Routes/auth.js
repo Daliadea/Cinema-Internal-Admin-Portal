@@ -4,20 +4,9 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const Staff = require('../models/Staff');
 
-// Create the email transporter.
-// If real Gmail credentials are set in .env, use Gmail.
-// Otherwise create a free Ethereal test account — emails are captured locally
-// and a preview URL is printed to the terminal instead of being sent for real.
+// Ethereal: test emails are captured locally, preview URL printed to terminal
 async function createTransporter() {
-  if (process.env.EMAIL_USER && process.env.EMAIL_USER !== 'your-email@gmail.com') {
-    return nodemailer.createTransport({
-      service: 'gmail',
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-    });
-  }
-  // Ethereal: auto-creates a throwaway test account
   const testAccount = await nodemailer.createTestAccount();
-  console.log('Using Ethereal test email account:', testAccount.user);
   return nodemailer.createTransport({
     host: 'smtp.ethereal.email',
     port: 587,
@@ -160,8 +149,8 @@ router.post('/forgot-password', async (req, res) => {
     const etherealURL = nodemailer.getTestMessageUrl(info) || null;
     if (etherealURL) {
       console.log('-------------------------------------------');
-      console.log('RESET LINK:   ', resetURL);
-      console.log('EMAIL PREVIEW:', etherealURL);
+      console.log('Reset Link:   ', resetURL);
+      console.log('Email:', etherealURL);
       console.log('-------------------------------------------');
     }
 

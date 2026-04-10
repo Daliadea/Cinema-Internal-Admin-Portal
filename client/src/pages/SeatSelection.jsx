@@ -19,21 +19,24 @@ export default function SeatSelection() {
   const navigate = useNavigate()
   const { customer, logout, authLoading } = useAuth()
 
+  // Screening data loaded from the API
   const [screening, setScreening] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  // Array of seat codes the user has clicked (e.g. ['A1', 'B3'])
   const [selectedSeats, setSelectedSeats] = useState([])
 
-  // Booking state
+  // Controls the two-step confirm flow: false = seat map, true = confirm panel
   const [showConfirm, setShowConfirm] = useState(false)
-  const [booking, setBooking] = useState(false)
+  const [booking, setBooking] = useState(false)       // true while API call is in-flight
   const [bookingError, setBookingError] = useState(null)
   const [bookingSuccess, setBookingSuccess] = useState(null)
 
-  // Concurrency banner
+  // Shown when the server returns 409 (seat taken by someone else mid-flow)
   const [concurrencyError, setConcurrencyError] = useState(null)
 
-  // Auth modal
+  // Auth modal (shown when guest tries to proceed without logging in)
   const [showAuth, setShowAuth] = useState(false)
   const [authTab, setAuthTab] = useState('login')
 
@@ -57,28 +60,36 @@ export default function SeatSelection() {
     }
   }
 
+  // Toggle a seat on/off in selectedSeats.
+  // If the seat is already selected, remove it. If not and under limit, add it.
   function toggleSeat(seatCode) {
     setConcurrencyError(null)
     setSelectedSeats(prev => {
       if (prev.includes(seatCode)) return prev.filter(s => s !== seatCode)
-      if (prev.length >= MAX_SEATS) return prev   // limit reached — banner shown above the map
+      if (prev.length >= MAX_SEATS) return prev   // silently ignore; banner is shown above map
       return [...prev, seatCode]
     })
   }
 
-  // Refresh map immediately before showing the confirm panel so seat data is fresh
+  // Called when user clicks "Review & Book".
+  // Re-fetches the screening first so the seat map is up-to-date before confirming.
   async function handleProceed() {
     if (!customer) {
+      // Guest user — show login modal instead of proceeding
       setAuthTab('login')
       setShowAuth(true)
       return
     }
     setBookingError(null)
-    // Refresh seat data before confirming so the user sees the latest state
-    await fetchScreening()
+    await fetchScreening()   // refresh bookedSeats to catch any seats taken while browsing
     setShowConfirm(true)
   }
 
+  // Called when user clicks "Confirm & Pay".
+  // Sends selected seats to the API; handles three failure cases:
+  //   401 = JWT expired (force re-login)
+  //   409 = seat conflict (someone else grabbed a seat at the same moment)
+  //   other = generic error message
   async function handleBook() {
     if (!customer || selectedSeats.length === 0) return
     setBooking(true)
@@ -89,7 +100,7 @@ export default function SeatSelection() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${customer.token}`
+          'Authorization': `Bearer ${customer.token}` // JWT sent as Bearer header
         },
         body: JSON.stringify({
           customerName: customer.name,
@@ -103,7 +114,7 @@ export default function SeatSelection() {
 
       if (!res.ok) {
         if (res.status === 401) {
-          // Token expired — sign the user out and prompt re-login
+          // Token expired mid-flow — log out and show login
           logout()
           setShowConfirm(false)
           setAuthTab('login')
@@ -111,8 +122,11 @@ export default function SeatSelection() {
           return
         }
         if (res.status === 409) {
-          const contested = [...selectedSeats]
-          await fetchScreening()
+          // Concurrency conflict: another user booked the same seat between
+          // the time the user selected it and clicked confirm.
+          // Use the server's contestedSeats (only the actually-taken ones, not all selected).
+          const contested = data.contestedSeats || []
+          await fetchScreening()    // refresh map to reflect new reality
           setSelectedSeats([])
           setShowConfirm(false)
           setBookingError(null)
@@ -123,6 +137,7 @@ export default function SeatSelection() {
         return
       }
 
+      // Success — show confirmation, clear selection, refresh seat map
       setBookingSuccess(data)
       setSelectedSeats([])
       setShowConfirm(false)

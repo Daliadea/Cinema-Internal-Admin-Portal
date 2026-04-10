@@ -1,3 +1,7 @@
+// bookings.js — Admin view of all customer bookings (read-only, EJS).
+// Supports filtering by customer email, movie, and booking date range.
+// Revenue and ticket totals are calculated from the filtered result set.
+
 const express = require('express');
 const router = express.Router();
 const Booking = require('../models/Booking');
