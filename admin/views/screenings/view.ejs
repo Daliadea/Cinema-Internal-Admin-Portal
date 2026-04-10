@@ -2,6 +2,9 @@
 
 <div class="container" id="main-content">
   <%- include('../partials/success', { success: typeof success !== 'undefined' ? success : null }) %>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert alert-error"><%= error %></div>
+  <% } %>
   <div class="page-header">
     <div>
       <h1>Screening Details</h1>

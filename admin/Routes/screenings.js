@@ -4,6 +4,7 @@ const router = express.Router();
 const Screening = require('../models/Screening');
 const Movie = require('../models/Movie');
 const Hall = require('../models/Hall');
+const Booking = require('../models/Booking');
 
 // Remove duplicate hall names (same name, different documents)
 function dedupeHalls(halls) {
@@ -172,7 +173,8 @@ router.get('/:id', async (req, res) => {
     const screening = await Screening.findById(req.params.id).populate('movie').populate('hall');
     if (!screening) return res.status(404).send('Screening not found');
     const success = req.query.updated ? 'Screening updated successfully.' : null;
-    res.render('screenings/view', { screening, success, staff: req.session });
+    const error = req.query.error ? decodeURIComponent(req.query.error) : null;
+    res.render('screenings/view', { screening, success, error, staff: req.session });
   } catch (error) {
     console.error('Error fetching screening:', error);
     res.status(500).send('Error fetching screening');
@@ -236,6 +238,18 @@ router.post('/:id', async (req, res) => {
 // POST - Delete a screening
 router.post('/:id/delete', async (req, res) => {
   try {
+    const screening = await Screening.findById(req.params.id);
+    if (!screening) return res.status(404).send('Screening not found');
+
+    // Block deletion if customers have already booked seats for this screening
+    const bookingCount = await Booking.countDocuments({ screening: screening._id });
+    if (bookingCount > 0) {
+      return res.redirect(
+        `/admin/screenings/${screening._id}?error=` +
+        encodeURIComponent(`Cannot delete screening. There are ${bookingCount} booking(s) for this screening. Cancel the bookings first.`)
+      );
+    }
+
     await Screening.findByIdAndDelete(req.params.id);
     res.redirect('/admin/screenings?deleted=1');
   } catch (error) {
